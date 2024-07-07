@@ -1,5 +1,5 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/guybuk/gataset/python-package.yml)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/guybuk/bridge-ds/python-package.yml)
 
 [TITLE IMAGE PLACEHOLDER]
 
