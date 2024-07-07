@@ -43,26 +43,8 @@ class-based, tab-completion-ey interface.
 
 # Installation
 
-## Install From Source
-
-To develop Bridge, use the `[dev]` version:
-
 ```
-git clone https://github.com/guybuk/bridge_ds.git
-cd bridge_ds
-pip install ".[dev]"
-pre-commit install
-
-# Optionally run tests, as a sanity check:
-pytest .
-```
-
-To use Bridge:
-
-```
-git clone https://github.com/guybuk/bridge_ds.git
-cd bridge_ds
-pip install .
+pip install bridge-ds
 ```
 
 ## Documentation
