@@ -121,9 +121,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
             coco_annotations = self._coco.loadAnns(self._coco.getAnnIds(img_id))
             for coco_ann_dict in coco_annotations:
                 category_id = coco_ann_dict["category_id"]
-                bbox_data = BoundingBox(
-                    coords=(np.array(coco_ann_dict["bbox"])), class_label=(ClassLabel(category_id))
-                )
+                bbox_data = BoundingBox(coords=(np.array(coco_ann_dict["bbox"])), class_label=(ClassLabel(category_id)))
                 load_mechanism = LoadMechanism(bbox_data, category=DataCategory.obj)
                 bbox_element = Element(
                     element_id=f"{img_id}_{coco_ann_dict['id']}",

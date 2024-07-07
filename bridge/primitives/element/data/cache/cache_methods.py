@@ -21,8 +21,7 @@ class CacheCategory(ABC):
         data: ELEMENT_DATA_TYPE,
         url: URIComponents | None,
         category: DataCategory,
-    ) -> LoadMechanism:
-        ...
+    ) -> LoadMechanism: ...
 
 
 class CacheImage(CacheCategory):

@@ -124,9 +124,7 @@ class Sample(Displayable):
         return d
 
     @staticmethod
-    def _get_cache_mechanisms_for_transform(
-        sample: Sample, cache_mechanisms: Dict[ElementType, CacheMechanism] | None
-    ):
+    def _get_cache_mechanisms_for_transform(sample: Sample, cache_mechanisms: Dict[ElementType, CacheMechanism] | None):
         if cache_mechanisms is None:
             cache_mechanisms = {}
 
