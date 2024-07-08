@@ -119,7 +119,7 @@ maintainers = [
 # For an analysis of this field vs pip's requirements files see:
 # https://packaging.python.org/discussions/install-requires-vs-requirements/
 dependencies = [
-    "pandas", "numpy", "imageio", "holoviews", "panel", "dill", "torch", "torchvision", "datasets", "scipy", "hvplot", "pycocotools", "tabulate", "albumentations"
+    "pandas", "numpy","tqdm"
 ]
 
 # List additional groups of dependencies here (e.g. development
@@ -132,7 +132,8 @@ dependencies = [
 # referred to as "extras". For a more extensive definition see:
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras
 [project.optional-dependencies]
-dev = ["pytest","pytest-mock","jupyter","notebook","pre-commit","testbook"]
+vision = ["scikit-image","pillow","holoviews","panel","hvplot","albumentations","tabulate"]
+dev = ["pytest","pytest-mock","pre-commit","ipykernel","testbook"]
 #test = ["coverage"]
 
 # List URLs that are relevant to your project

@@ -4,8 +4,6 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
-import PIL.Image
-
 from bridge.primitives.element.data.category import DataCategory
 from bridge.primitives.element.data.load.load_mechanism import LoadMechanism
 
@@ -27,12 +25,14 @@ class CacheCategory(ABC):
 class CacheImage(CacheCategory):
     @staticmethod
     def store(data: ELEMENT_DATA_TYPE, url: URIComponents | None, category: DataCategory) -> LoadMechanism:
+        import PIL.Image
+        from skimage.io import imsave
+
         if url is None:
             return LoadMechanism(PIL.Image.fromarray(data), category)
 
         if url.scheme not in ["", "file"]:
             raise NotImplementedError()
-        from skimage.io import imsave
 
         path = Path(str(url)).expanduser()
 
