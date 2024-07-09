@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any, Dict, List, Union
 
 import albumentations as A
 import numpy as np
-import torch
 from PIL.Image import Image
 
 from bridge.primitives.element.data.category import DataCategory
@@ -13,6 +12,7 @@ from bridge.primitives.element.element import Element
 from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample import Sample
 from bridge.primitives.sample.transform.sample_transform import SampleTransform
+from bridge.utils import optional_dependencies
 from bridge.utils.data_objects import BoundingBox
 
 if TYPE_CHECKING:
@@ -54,7 +54,7 @@ class AlbumentationsCompose(SampleTransform):
 
     def _elements_to_albm(self, elements: Dict[ElementType, List[Element]]):
         albm_dict = {}
-        assert ElementType.image in elements, "who the fuck albumentates without an image?"
+        assert ElementType.image in elements, "Can't apply albumentations without an image element."
         for i, img_element in enumerate(elements[ElementType.image]):
             data = img_element.data
             albm_dict[f"image_{i}"] = data
@@ -106,10 +106,15 @@ class AlbumentationsCompose(SampleTransform):
             new_element_data = BoundingBox(albm_data[:4], class_label=albm_data[4])  # noqa
             new_category = DataCategory.obj
         elif curr_element.etype == ElementType.image:
-            if isinstance(albm_data, torch.Tensor):
-                new_category = DataCategory.torch
-            else:
+            if isinstance(albm_data, np.ndarray):
                 new_category = DataCategory.image
+            else:
+                with optional_dependencies(error="raise"):
+                    import torch
+                if isinstance(albm_data, torch.Tensor):
+                    new_category = DataCategory.torch
+                else:
+                    raise NotImplementedError(f"invalid data type: {type(albm_data)}")
             new_element_data = albm_data
         else:
             raise NotImplementedError()

@@ -13,7 +13,12 @@ if TYPE_CHECKING:
     from bridge.primitives.element.element import Element
     from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
 
-CATEGORY_TO_EXTENSION = {DataCategory.image: ".jpg", DataCategory.torch: ".pt", DataCategory.text: ".txt"}
+CATEGORY_TO_EXTENSION = {
+    DataCategory.image: ".jpg",
+    DataCategory.torch: ".pt",
+    DataCategory.text: ".txt",
+    DataCategory.obj: ".pkl",
+}
 
 
 class CacheMechanism:

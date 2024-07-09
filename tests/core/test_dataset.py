@@ -2,7 +2,6 @@ from pathlib import Path
 
 import numpy as np
 import pytest
-from PIL import Image
 
 from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
@@ -28,8 +27,8 @@ def dummy_elements():
             sample_id=i,
             etype=ElementType.image,
             load_mechanism=LoadMechanism(
-                url_or_data=Image.fromarray(np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8")),
-                category=DataCategory.image,
+                url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
+                category=DataCategory.obj,
             ),
         )
         lbl_element = Element(
@@ -57,8 +56,8 @@ def dummy_elements_2():
             sample_id=50 + i,
             etype=ElementType.image,
             load_mechanism=LoadMechanism(
-                url_or_data=Image.fromarray(np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8")),
-                category=DataCategory.image,
+                url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
+                category=DataCategory.obj,
             ),
         )
         lbl_element = Element(

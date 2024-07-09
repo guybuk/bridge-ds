@@ -16,8 +16,7 @@ from typing import IO, Any, Callable, Dict, Iterable, List, Optional, Tuple, Typ
 from urllib.parse import urlparse
 
 import numpy as np
-import torch
-from torch.utils.model_zoo import tqdm
+from tqdm import tqdm
 
 
 def _urlretrieve(url: str, filename: Union[str, pathlib.Path], chunk_size: int = 1024 * 32) -> None:
@@ -210,7 +209,20 @@ def _extract_tar(
     from_path: Union[str, pathlib.Path], to_path: Union[str, pathlib.Path], compression: Optional[str]
 ) -> None:
     with tarfile.open(from_path, f"r:{compression[1:]}" if compression else "r") as tar:
-        tar.extractall(to_path)
+        # tar.extractall(to_path)
+        tar_members = tar.getmembers()
+
+        # List of files in the target directory
+        existing_files = set(os.path.join(to_path, f) for f in os.listdir(to_path))
+
+        # Extract missing files
+        for member in tar_members:
+            member_path = os.path.join(to_path, member.name)
+            if member_path not in existing_files:
+                print(f"Extracting {member.name} to {to_path}")
+                tar.extract(member, to_path)
+            else:
+                print(f"{member.name} already exists in {to_path}, skipping.")
 
 
 _ZIP_COMPRESSION_MAP: Dict[str, int] = {
@@ -461,9 +473,3 @@ def _read_pfm(file_name: Union[str, pathlib.Path], slice_channels: int = 2) -> n
     data = np.flip(data, axis=1)  # flip on h dimension
     data = data[:slice_channels, :, :]
     return data.astype(np.float32)
-
-
-def _flip_byte_order(t: torch.Tensor) -> torch.Tensor:
-    return (
-        t.contiguous().view(torch.uint8).view(*t.shape, t.element_size()).flip(-1).view(*t.shape[:-1], -1).view(t.dtype)
-    )
