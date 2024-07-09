@@ -133,7 +133,7 @@ dependencies = [
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras
 [project.optional-dependencies]
 vision = ["scikit-image","pillow","holoviews","panel","hvplot","albumentations","tabulate"]
-dev = ["pytest","pytest-mock","pre-commit","ipykernel","testbook"]
+dev = ["pytest","pytest-mock","pre-commit","ipykernel","testbook","sphinx"]
 #test = ["coverage"]
 
 # List URLs that are relevant to your project

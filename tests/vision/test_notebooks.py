@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-NOTEBOOK_DIR = Path.cwd() / "notebooks"
+NOTEBOOK_DIR = Path.cwd() / "docs" / "source" / "notebooks"
 DATA_DIR = Path.cwd() / "tests" / "data"
 
 NOTEBOOKS_LIST = [p for p in NOTEBOOK_DIR.rglob("*[!\.ipynb_checkpoints]*.ipynb") if ".ipynb_checkpoints" not in str(p)]
