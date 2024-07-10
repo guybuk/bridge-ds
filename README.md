@@ -51,8 +51,8 @@ pip install bridge-ds
 
 For high-level demos to show off Bridge's capabilities, consider
 browsing the following notebooks:
-1. [Quick and easy data exploration](notebooks/basics/coco_eda_demo.ipynb)
-2. [From sources, through augmentations, to Pytorch](notebooks/processing_data/source2tensors_demo.ipynb)
+1. [Quick and easy data exploration](docs/source/notebooks/vision/fundamentals/coco_eda_demo.ipynb)
+2. [From sources, through augmentations, to Pytorch](docs/source/notebooks/vision/processing_data/source2tensors_demo.ipynb)
 
 For a deeper understanding of Bridge, and to connect your custom datasets and data types,
  proceed to our [notebooks](notebooks) folder.
