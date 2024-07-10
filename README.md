@@ -16,23 +16,27 @@ class-based, tab-completion-ey interface.
 
 <!-- TOC -->
 * [Contents](#contents)
-  * [Key Features](#key-features)
+* [Key Features](#key-features)
 * [Installation](#installation)
-  * [Documentation](#documentation)
+* [Documentation](#documentation)
 <!-- TOC -->
 
-## Key Features
+# Key Features
 
 **Browse**
+
 ![Browse Datasets](docs/gifs/browse.gif)
 
 **Work with tables**
+
 ![Table Interface](docs/gifs/tables.gif)
 
 **Plot your data**
+
 ![Plotting](docs/gifs/plot.gif)
 
 **Assign, sort and filter**
+
 ![Table Operations](docs/gifs/do_stuff.gif)
 
 
