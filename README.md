@@ -10,16 +10,42 @@ with a Pandas-like
 experience, and handle individual samples and raw data using a
 class-based, tab-completion-ey interface.
 
-**Key Features**
 
+
+# Contents
+
+<!-- TOC -->
+* [Contents](#contents)
+  * [Key Features](#key-features)
+* [Installation](#installation)
+  * [Documentation](#documentation)
+<!-- TOC -->
+
+## Key Features
+
+**Browse**
+![Browse Datasets](docs/gifs/browse.gif)
+
+**Work with tables**
+![Table Interface](docs/gifs/tables.gif)
+
+**Plot your data**
+![Plotting](docs/gifs/plot.gif)
+
+**Assign, sort and filter**
+![Table Operations](docs/gifs/do_stuff.gif)
+
+
+* **Explore data in your notebook:**
+    
+    * Browse your data directly in your notebook, without
+      intermediary web-apps.
 * **Dataset as a table:**
+    
     * Give your deep learning dataset a DataFrame
       interface; making
       cumbersome operations such as selections, sorting and
       aggregations - easy.
-* **Explore data in your notebook:**
-    * Browse your data directly in your notebook, without
-      intermediary web-apps.
 * **Agnostic to Deep Learning Engines:**
     * Convert into a training-ready dataset
       in your DL framework of choice.
@@ -32,27 +58,27 @@ class-based, tab-completion-ey interface.
 * **Keep your data to yourself**:
     * No need to upload your data to third parties.
 
-# Contents
-
-<!-- TOC -->
-* [Contents](#contents)
-* [Installation](#installation)
-  * [Install From Source](#install-from-source)
-  * [Documentation](#documentation)
-<!-- TOC -->
-
 # Installation
 
+You can install the latest version of Bridge's from PyPI. It comes in a few flavors:
+
+*Core*: The core package includes the basic functionality of Bridge.
+
+```bash
+$ pip install bridge-ds
 ```
-pip install bridge-ds
+*Vision*: The vision package includes the core package and additional functionality for working with image datasets.
+
+
+```bash
+$ pip install bridge-ds[vision]
+```
+*Dev*: The dev package includes the core package and additional tools for development.
+
+```bash
+$ pip install bridge-ds[dev]
 ```
 
-## Documentation
+# Documentation
 
-For high-level demos to show off Bridge's capabilities, consider
-browsing the following notebooks:
-1. [Quick and easy data exploration](docs/source/notebooks/vision/fundamentals/coco_eda_demo.ipynb)
-2. [From sources, through augmentations, to Pytorch](docs/source/notebooks/vision/processing_data/source2tensors_demo.ipynb)
-
-For a deeper understanding of Bridge, and to connect your custom datasets and data types,
- proceed to our [notebooks](notebooks) folder.
+For the official documentation, please visit [here](https://bridge-ds.readthedocs.io/).
