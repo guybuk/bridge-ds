@@ -75,5 +75,5 @@ Custom datasets
 Processing data
 ^^^^^^^^^^^^^^^
 
-* :doc:`Load Mechanism <notebooks/vision/processing_data/cache_mechanism>`
-* :doc:`Dataset Provider <notebooks/vision/processing_data/sample_transform>`
+* :doc:`Cache Mechanism <notebooks/vision/processing_data/cache_mechanism>`
+* :doc:`Sample Transform <notebooks/vision/processing_data/sample_transform>`

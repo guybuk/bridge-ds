@@ -1,9 +1,18 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/guybuk/bridge-ds/python-package.yml)
+[![Documentation Status](https://readthedocs.org/projects/bridge-ds/badge/?version=latest)](https://bridge-ds.readthedocs.io/en/latest/?badge=latest)
 
-[TITLE IMAGE PLACEHOLDER]
 
-_Bridge_ is a lightweight Python framework designed to provide a
+```
+    __         _     __                     __    
+   / /_  _____(_)___/ /___ ____        ____/ /____
+  / __ \/ ___/ / __  / __ `/ _ \______/ __  / ___/
+ / /_/ / /  / / /_/ / /_/ /  __/_____/ /_/ (__  ) 
+/_.___/_/  /_/\__,_/\__, /\___/      \__,_/____/  
+                   /____/                         
+```
+
+_bridge-ds_ is a lightweight Python framework designed to provide a
 unified interface to deep learning datasets from different
 modalities: Perform global operations, aggregations and queries
 with a Pandas-like
@@ -83,6 +92,7 @@ $ pip install bridge-ds[vision]
 $ pip install bridge-ds[dev]
 ```
 
+* _NOTE_: to run the notebooks you'll need both the `vision` and `dev` packages.
 # Documentation
 
-For the official documentation, please visit [here](https://bridge-ds.readthedocs.io/).
+To learn more about bridge-ds, please visit the [official documentation](https://bridge-ds.readthedocs.io/).
