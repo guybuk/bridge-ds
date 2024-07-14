@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Hashable
 
 import pandas as pd
 
-from bridge.primitives.element.data.cache.cache_methods import CachingMethodExecutor
+from bridge.primitives.element.data.cache import cache_methods
 from bridge.primitives.element.data.category import DataCategory
 from bridge.primitives.element.data.uri_components import URIComponents
 
@@ -39,7 +39,7 @@ class CacheMechanism:
         if as_category is None:
             as_category = element.category
         uri = self._build_uri(element, as_category)
-        new_provider = CachingMethodExecutor().store(data, uri, as_category)  # noqa
+        new_provider = cache_methods.store(data, uri, as_category)
         if should_update_elements and self._elements is not None:
             self._update_samples_with_new_provider(element.id, new_provider)
         return new_provider

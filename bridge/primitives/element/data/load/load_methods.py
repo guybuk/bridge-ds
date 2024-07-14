@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Dict
+import warnings
+from typing import TYPE_CHECKING, Callable
 
 import numpy as np
 
@@ -11,70 +11,64 @@ from bridge.primitives.element.data.uri_components import URIComponents
 if TYPE_CHECKING:
     from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
 
-
-class LoadCategory(ABC):
-    @staticmethod
-    @abstractmethod
-    def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
-        pass
+REGISTRY = {}
 
 
-class LoadImage(LoadCategory):
-    @staticmethod
-    def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
-        if not isinstance(url_or_data, URIComponents):
-            return np.array(url_or_data)  # assumes object is a PIL image or np.ndarray
+def register(category: DataCategory):
+    def decorator(method: Callable[[URIComponents | ELEMENT_DATA_TYPE], ELEMENT_DATA_TYPE]):
+        if category in REGISTRY:
+            warnings.warn(f"Overriding method for category {category}...")
+        REGISTRY[category] = method
+        return method
 
-        if url_or_data.scheme not in ["http", "https", "file", ""]:
-            raise NotImplementedError()
-        from skimage.io import imread
-
-        return imread(str(url_or_data))
+    return decorator
 
 
-class LoadText(LoadCategory):
-    @staticmethod
-    def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
-        if not isinstance(url_or_data, URIComponents):
-            return url_or_data  # assumes object is a string
+@register(DataCategory.image)
+def _load_image(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    if not isinstance(url_or_data, URIComponents):
+        return np.array(url_or_data)  # assumes object is a PIL image or np.ndarray
 
-        return open(str(url_or_data), "r").read()
+    if url_or_data.scheme not in ["http", "https", "file", ""]:
+        raise NotImplementedError("Only loading from local or http(s) URLs is supported for now.")
+    from skimage.io import imread
 
-
-class LoadTorch(LoadCategory):
-    @staticmethod
-    def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
-        if not isinstance(url_or_data, URIComponents):
-            return url_or_data
-        import torch
-
-        return torch.load(str(url_or_data))
+    return imread(str(url_or_data))
 
 
-class LoadNumpy(LoadCategory):
-    @staticmethod
-    def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
-        if not isinstance(url_or_data, URIComponents):
-            return url_or_data  # assume that is already np array
-        return np.load(str(url_or_data))
+@register(DataCategory.text)
+def _load_text(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    if not isinstance(url_or_data, URIComponents):
+        return url_or_data  # assumes object is a string
+
+    return open(str(url_or_data), "r").read()
 
 
-class LoadObj(LoadCategory):
-    @staticmethod
-    def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
-        if not isinstance(url_or_data, URIComponents):
-            return url_or_data  # assume that is already np array
-        raise NotImplementedError()
+@register(DataCategory.torch)
+def _load_torch(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    if not isinstance(url_or_data, URIComponents):
+        return url_or_data  # assume that is already torch tensor
+    import torch
+
+    return torch.load(str(url_or_data))
 
 
-class LoadingMethodExecutor:
-    LOAD_DATA_METHODS: Dict[DataCategory, LoadCategory] = {
-        DataCategory.image: LoadImage,
-        DataCategory.text: LoadText,
-        DataCategory.torch: LoadTorch,
-        DataCategory.numpy: LoadNumpy,
-        DataCategory.obj: LoadObj,
-    }
+@register(DataCategory.numpy)
+def _load_numpy(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    if not isinstance(url_or_data, URIComponents):
+        return url_or_data  # assume that is already np array
+    return np.load(str(url_or_data))
 
-    def load(self, url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: DataCategory) -> ELEMENT_DATA_TYPE:
-        return self.LOAD_DATA_METHODS[category].load(url_or_data)
+
+@register(DataCategory.obj)
+def _load_obj(url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    if not isinstance(url_or_data, URIComponents):
+        return url_or_data
+    raise NotImplementedError()
+
+
+def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: DataCategory) -> ELEMENT_DATA_TYPE:
+    return REGISTRY[category](url_or_data)
+
+
+__all__ = ["load", "register"]

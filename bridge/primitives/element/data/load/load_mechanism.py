@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 from typing_extensions import Self
 
-from bridge.primitives.element.data.load.load_methods import LoadingMethodExecutor
+from bridge.primitives.element.data.load import load_methods
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.utils import Dictable
 from bridge.utils.constants import ELEMENT_COLS
@@ -30,7 +30,7 @@ class LoadMechanism(Dictable):
         return self._category
 
     def load_data(self) -> Any:
-        return LoadingMethodExecutor().load(self._url_or_data, self._category)
+        return load_methods.load(self._url_or_data, self._category)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
