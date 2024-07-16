@@ -9,8 +9,7 @@ from tqdm import tqdm
 
 from bridge.display.basic import SimplePrints
 from bridge.primitives.dataset import SingularDataset
-from bridge.primitives.element.data.category import DataCategory
-from bridge.primitives.element.data.load.load_mechanism import LoadMechanism
+from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample.singular_sample import SingularSample
@@ -20,7 +19,7 @@ from bridge.utils.data_objects import BoundingBox, ClassLabel
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
 class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
@@ -39,14 +38,14 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
                     element_id=f"image_{sample_id}",
                     sample_id=sample_id,
                     etype=ElementType.image,
-                    load_mechanism=LoadMechanism.from_url_string(str(img_file), category=DataCategory.image),
+                    load_mechanism=LoadMechanism.from_url_string(str(img_file), category="image"),
                     metadata={"filename": img_file.name},
                 )
                 class_element = Element(
                     element_id=f"class_{i}",
                     sample_id=sample_id,
                     etype=ElementType.class_label,
-                    load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), category=DataCategory.obj),
+                    load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), category="obj"),
                     metadata={"filename": img_file.name},
                 )
                 images.append(img_element)
@@ -109,7 +108,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
                 url = coco_img["coco_url"]  # noqa
             else:
                 url = str(img_file)
-            load_mechanism = LoadMechanism.from_url_string(url, category=DataCategory.image)  # noqa
+            load_mechanism = LoadMechanism.from_url_string(url, category="image")  # noqa
             img_element = Element(
                 element_id=f"{img_id}_img",
                 sample_id=img_id,
@@ -122,7 +121,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
             for coco_ann_dict in coco_annotations:
                 category_id = coco_ann_dict["category_id"]
                 bbox_data = BoundingBox(coords=(np.array(coco_ann_dict["bbox"])), class_label=(ClassLabel(category_id)))
-                load_mechanism = LoadMechanism(bbox_data, category=DataCategory.obj)
+                load_mechanism = LoadMechanism(bbox_data, category="obj")
                 bbox_element = Element(
                     element_id=f"{img_id}_{coco_ann_dict['id']}",
                     sample_id=img_id,
@@ -159,7 +158,7 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
                 element_id=i,
                 etype=ElementType.image,
                 sample_id=i,
-                load_mechanism=LoadMechanism(url_or_data=img, category=DataCategory.image),
+                load_mechanism=LoadMechanism(url_or_data=img, category="image"),
             )
             label_element = Element(
                 element_id=f"label_{i}",
@@ -167,7 +166,7 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
                 sample_id=i,
                 load_mechanism=LoadMechanism(
                     url_or_data=ClassLabel(class_idx=target, class_name=self._ds.classes[target]),
-                    category=DataCategory.obj,
+                    category="obj",
                 ),
             )
             sample_list.append(img_element)

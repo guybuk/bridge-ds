@@ -6,8 +6,7 @@ from typing import TYPE_CHECKING, Dict
 
 from bridge.display.basic import SimplePrints
 from bridge.primitives.dataset.singular_dataset import SingularDataset
-from bridge.primitives.element.data.category import DataCategory
-from bridge.primitives.element.data.load.load_mechanism import LoadMechanism
+from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample.singular_sample import SingularSample
@@ -17,7 +16,7 @@ from bridge.utils.data_objects import ClassLabel
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
 class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
@@ -44,14 +43,14 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
         class_dir_list = [d for d in list(self._split_root.iterdir()) if d.is_dir()]
         for class_idx, class_dir in enumerate(sorted(class_dir_list)):
             for textfile in class_dir.iterdir():
-                load_mechanism = LoadMechanism.from_url_string(str(textfile), DataCategory.text)
+                load_mechanism = LoadMechanism.from_url_string(str(textfile), "text")
                 text_element = Element(
                     element_id=f"text_{textfile.stem}",
                     sample_id=textfile.stem,
                     etype=ElementType.text,
                     load_mechanism=load_mechanism,
                 )
-                load_mechanism = LoadMechanism(ClassLabel(class_idx, class_dir.name), category=DataCategory.obj)
+                load_mechanism = LoadMechanism(ClassLabel(class_idx, class_dir.name), category="obj")
                 label_element = Element(
                     element_id=f"label_{textfile.stem}",
                     sample_id=textfile.stem,

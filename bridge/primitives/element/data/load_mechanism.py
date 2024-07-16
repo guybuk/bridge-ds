@@ -4,20 +4,20 @@ from typing import TYPE_CHECKING, Any, Dict
 
 from typing_extensions import Self
 
-from bridge.primitives.element.data.load.load_methods import LoadingMethodExecutor
+from bridge.primitives.element.data import data_io
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.utils import Dictable
 from bridge.utils.constants import ELEMENT_COLS
 
 if TYPE_CHECKING:
-    from bridge.primitives.element.data.category import DataCategory
     from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
 
 
 class LoadMechanism(Dictable):
     keys = ELEMENT_COLS.LOAD_MECHANISM.list()
 
-    def __init__(self, url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: DataCategory) -> None:
+    def __init__(self, url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: str) -> None:
+        assert data_io.is_registered(category), f"Category {category} is not registered."
         self._url_or_data = url_or_data
         self._category = category
 
@@ -26,11 +26,11 @@ class LoadMechanism(Dictable):
         return self._url_or_data
 
     @property
-    def category(self) -> DataCategory:
+    def category(self) -> str:
         return self._category
 
     def load_data(self) -> Any:
-        return LoadingMethodExecutor().load(self._url_or_data, self._category)
+        return data_io.load(self._url_or_data, self._category)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -47,6 +47,6 @@ class LoadMechanism(Dictable):
         )
 
     @classmethod
-    def from_url_string(cls, url_string: str, category: DataCategory) -> Self:
+    def from_url_string(cls, url_string: str, category: str) -> Self:
         components = URIComponents.from_str(url_string)
         return cls(components, category)

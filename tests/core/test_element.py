@@ -1,8 +1,8 @@
 import pytest
 
 from bridge.display import DisplayEngine
-from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
-from bridge.primitives.element.data.load.load_mechanism import LoadMechanism
+from bridge.primitives.element.data.cache_mechanism import CacheMechanism
+from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.element.element_type import ElementType
 

@@ -4,15 +4,14 @@ from typing import TYPE_CHECKING, Any, Dict, Hashable
 
 import pandas as pd
 
-from bridge.primitives.element.data.load.load_mechanism import LoadMechanism
+from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.utils import validate_metadata
 from bridge.utils.constants import ELEMENT_COLS
 from bridge.utils.helper import Displayable
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
-    from bridge.primitives.element.data.category import DataCategory
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
     from bridge.primitives.element.element_type import ElementType
 
@@ -60,7 +59,7 @@ class Element(Displayable):
         return self._etype
 
     @property
-    def category(self) -> DataCategory:
+    def category(self) -> str:
         return self._load_mechanism.category
 
     @property
