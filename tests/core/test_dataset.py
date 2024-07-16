@@ -4,9 +4,8 @@ import numpy as np
 import pytest
 
 from bridge.primitives.dataset import Dataset
-from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
-from bridge.primitives.element.data.category import DataCategory
-from bridge.primitives.element.data.load.load_mechanism import LoadMechanism
+from bridge.primitives.element.data.cache_mechanism import CacheMechanism
+from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.primitives.element.element import Element
 from bridge.primitives.element.element_type import ElementType
@@ -28,16 +27,14 @@ def dummy_elements():
             etype=ElementType.image,
             load_mechanism=LoadMechanism(
                 url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
-                category=DataCategory.obj,
+                category="obj",
             ),
         )
         lbl_element = Element(
             element_id=f"label_{i}",
             sample_id=i,
             etype=ElementType.class_label,
-            load_mechanism=LoadMechanism(
-                url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), category=DataCategory.obj
-            ),
+            load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), category="obj"),
         )
         elements.extend([img_element, lbl_element])
     return elements
@@ -57,16 +54,14 @@ def dummy_elements_2():
             etype=ElementType.image,
             load_mechanism=LoadMechanism(
                 url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
-                category=DataCategory.obj,
+                category="obj",
             ),
         )
         lbl_element = Element(
             element_id=f"label_{100+i}",
             sample_id=50 + i,  # Adjusting sample_id to create overlap
             etype=ElementType.class_label,
-            load_mechanism=LoadMechanism(
-                url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), category=DataCategory.obj
-            ),
+            load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), category="obj"),
         )
         elements.extend([img_element, lbl_element])
     return elements

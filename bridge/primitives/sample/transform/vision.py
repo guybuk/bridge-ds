@@ -7,7 +7,6 @@ import albumentations as A
 import numpy as np
 from PIL.Image import Image
 
-from bridge.primitives.element.data.category import DataCategory
 from bridge.primitives.element.element import Element
 from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample import Sample
@@ -17,7 +16,7 @@ from bridge.utils.data_objects import BoundingBox
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
 class AlbumentationsCompose(SampleTransform):
@@ -104,15 +103,15 @@ class AlbumentationsCompose(SampleTransform):
         if curr_element.etype == ElementType.bbox:
             albm_data = np.array(albm_data[0])
             new_element_data = BoundingBox(albm_data[:4], class_label=albm_data[4])  # noqa
-            new_category = DataCategory.obj
+            new_category = "obj"
         elif curr_element.etype == ElementType.image:
             if isinstance(albm_data, np.ndarray):
-                new_category = DataCategory.image
+                new_category = "image"
             else:
                 with optional_dependencies(error="raise"):
                     import torch
                 if isinstance(albm_data, torch.Tensor):
-                    new_category = DataCategory.torch
+                    new_category = "torch"
                 else:
                     raise NotImplementedError(f"invalid data type: {type(albm_data)}")
             new_element_data = albm_data

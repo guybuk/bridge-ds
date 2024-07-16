@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Dict, Hashable, List
 
 import pandas as pd
 
-from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.element.element_type import ElementType
 from bridge.utils.constants import ELEMENT_COLS, INDICES

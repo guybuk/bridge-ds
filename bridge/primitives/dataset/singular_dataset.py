@@ -12,7 +12,7 @@ from bridge.utils.constants import ELEMENT_COLS, INDICES, IS_SAMPLE_COL_NAME
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element import Element
     from bridge.primitives.element.element_type import ElementType
     from bridge.primitives.sample.transform import SampleTransform

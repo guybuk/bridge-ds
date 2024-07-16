@@ -17,7 +17,7 @@ from bridge.utils.helper import Displayable
 
 if TYPE_CHECKING:
     from bridge.display.display_engine import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element import Element
     from bridge.primitives.sample.transform import SampleTransform
 

@@ -8,7 +8,7 @@ from bridge.primitives.types import D, S
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element_type import ElementType
 
 

@@ -8,7 +8,7 @@ from typing_extensions import Self
 
 if TYPE_CHECKING:
     from bridge.display.display_engine import DisplayEngine
-    from bridge.primitives.element.data.cache.cache_mechanism import CacheMechanism
+    from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element import Element
     from bridge.primitives.element.element_type import ElementType
     from bridge.primitives.sample import Sample
