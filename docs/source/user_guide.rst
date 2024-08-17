@@ -62,8 +62,8 @@ Guides
 Fundametals
 ^^^^^^^^^^^
 
-* :doc:`Table API <notebooks/vision/fundamentals/table_api>`
 * :doc:`Sample API <notebooks/vision/fundamentals//sample_api>`
+* :doc:`Table API <notebooks/vision/fundamentals/table_api>`
 
 Custom datasets
 ^^^^^^^^^^^^^^^

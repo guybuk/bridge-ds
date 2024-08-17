@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING, Any, Dict
 import pandas as pd
 import panel as pn
 
-from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample.singular_sample import SingularSample
 
 if TYPE_CHECKING:
@@ -14,9 +13,9 @@ if TYPE_CHECKING:
 
 class TextClassification(DisplayEngine[SingularDataset, SingularSample]):
     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
-        if element.etype == ElementType.class_label:
+        if element.etype == "class_label":
             return pn.pane.Markdown(element.to_pd_series().to_frame().T.to_markdown())
-        elif element.etype == ElementType.text:
+        elif element.etype == "text":
             return pn.pane.Markdown(element.data)
         else:
             raise NotImplementedError()
@@ -27,9 +26,7 @@ class TextClassification(DisplayEngine[SingularDataset, SingularSample]):
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
     ):
-        annotations_md = pd.DataFrame(
-            [ann.to_pd_series() for ann in sample.annotations[ElementType.class_label]]
-        ).to_markdown()
+        annotations_md = pd.DataFrame([ann.to_pd_series() for ann in sample.annotations["class_label"]]).to_markdown()
         text_display = pn.pane.Markdown(sample.data)
         return pn.Column("# Sample Text:", text_display, "# Annotations Data:", annotations_md)
 
@@ -52,9 +49,9 @@ class TextClassification(DisplayEngine[SingularDataset, SingularSample]):
 
 # class Panel(DisplayEngine):
 #     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
-#         if element.etype == ElementType.class_label:
+#         if element.etype == "class_label":
 #             return self._show_class_label(element, element_plot_kwargs)
-#         elif element.etype == ElementType.text:
+#         elif element.etype == "text":
 #             return self._show_text(element, element_plot_kwargs)
 #         else:
 #             raise NotImplementedError()
@@ -66,9 +63,9 @@ class TextClassification(DisplayEngine[SingularDataset, SingularSample]):
 #         sample_plot_kwargs: Dict[str, Any] | None = None,
 #     ):
 #         annotations_md = pd.DataFrame(
-#             [ann.to_pd_series() for ann in sample.elements[ElementType.class_label]]
+#             [ann.to_pd_series() for ann in sample.elements["class_label"]]
 #         ).to_markdown()
-#         text_display = self.show_element(sample.elements[ElementType.text][0])
+#         text_display = self.show_element(sample.elements["text"][0])
 #         return pn.Column("# Sample Text:", text_display, "# Annotations Data:", annotations_md)
 #
 #     def show_dataset(

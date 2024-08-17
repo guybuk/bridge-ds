@@ -8,7 +8,6 @@ from bridge.display.basic import SimplePrints
 from bridge.primitives.dataset.singular_dataset import SingularDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample.singular_sample import SingularSample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils import download_and_extract_archive
@@ -35,7 +34,7 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
     def build_dataset(
         self,
         display_engine: DisplayEngine[SingularDataset, SingularSample] = SimplePrints(),
-        cache_mechanisms: Dict[ElementType, CacheMechanism] = None,
+        cache_mechanisms: Dict[str, CacheMechanism] = None,
     ) -> SingularDataset:
         samples = []
         annotations = []
@@ -47,14 +46,14 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
                 text_element = Element(
                     element_id=f"text_{textfile.stem}",
                     sample_id=textfile.stem,
-                    etype=ElementType.text,
+                    etype="text",
                     load_mechanism=load_mechanism,
                 )
                 load_mechanism = LoadMechanism(ClassLabel(class_idx, class_dir.name), category="obj")
                 label_element = Element(
                     element_id=f"label_{textfile.stem}",
                     sample_id=textfile.stem,
-                    etype=ElementType.class_label,
+                    etype="class_label",
                     load_mechanism=load_mechanism,
                 )
                 samples.append(text_element)

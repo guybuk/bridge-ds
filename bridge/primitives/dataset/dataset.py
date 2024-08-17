@@ -10,7 +10,6 @@ from typing_extensions import Self
 
 from bridge.primitives.dataset.sample_api import SampleAPI
 from bridge.primitives.dataset.table_api import TableAPI
-from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample import Sample
 from bridge.utils.constants import ELEMENT_COLS, INDICES
 from bridge.utils.helper import Displayable
@@ -27,7 +26,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         self,
         elements: pd.DataFrame,
         display_engine: DisplayEngine = None,
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
         self._elements = elements
         self._display_engine = display_engine
@@ -59,7 +58,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         self,
         other: "Dataset",
         display_engine: DisplayEngine | None = None,
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> "Dataset":
         self_element_ids = self.elements.index.get_level_values(ELEMENT_COLS.ID)
         other_element_ids = other.elements.index.get_level_values(ELEMENT_COLS.ID)
@@ -87,7 +86,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         self,
         transform: SampleTransform,
         map_fn=tmap,
-        cache_mechanisms: Dict[ElementType, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
         fn = functools.partial(
@@ -130,7 +129,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         cls,
         elements: Iterable[Element],
         display_engine: DisplayEngine = None,
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
         element_records = [e.to_pd_series() for e in elements]
         elements_df = pd.DataFrame(element_records).set_index(INDICES)

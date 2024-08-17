@@ -9,7 +9,6 @@ from bridge.primitives.types import D, S
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
-    from bridge.primitives.element.element_type import ElementType
 
 
 class DatasetProvider(ABC, Generic[D, S]):
@@ -17,6 +16,6 @@ class DatasetProvider(ABC, Generic[D, S]):
     def build_dataset(
         self,
         display_engine: DisplayEngine[D, S] = SimplePrints(),
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> D:
         pass

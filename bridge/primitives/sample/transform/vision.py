@@ -8,7 +8,6 @@ import numpy as np
 from PIL.Image import Image
 
 from bridge.primitives.element.element import Element
-from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample import Sample
 from bridge.primitives.sample.transform.sample_transform import SampleTransform
 from bridge.utils import optional_dependencies
@@ -33,7 +32,7 @@ class AlbumentationsCompose(SampleTransform):
     def __call__(
         self,
         sample: Sample,
-        cache_mechanisms: Dict[ElementType, CacheMechanism],
+        cache_mechanisms: Dict[str, CacheMechanism],
         display_engine: DisplayEngine | None,
     ) -> Sample:
         elements = copy.deepcopy(sample.elements)
@@ -51,32 +50,32 @@ class AlbumentationsCompose(SampleTransform):
         sample = Sample(elements=elements, display_engine=display_engine)
         return sample
 
-    def _elements_to_albm(self, elements: Dict[ElementType, List[Element]]):
+    def _elements_to_albm(self, elements: Dict[str, List[Element]]):
         albm_dict = {}
-        assert ElementType.image in elements, "Can't apply albumentations without an image element."
-        for i, img_element in enumerate(elements[ElementType.image]):
+        assert "image" in elements, "Can't apply albumentations without an image element."
+        for i, img_element in enumerate(elements["image"]):
             data = img_element.data
             albm_dict[f"image_{i}"] = data
         albm_dict.update({"image": albm_dict["image_0"], "bboxes": [], "keypoints": []})
 
-        if ElementType.bbox in elements:
-            for i, bbox_element in enumerate(elements[ElementType.bbox]):
+        if "bbox" in elements:
+            for i, bbox_element in enumerate(elements["bbox"]):
                 data: BoundingBox = bbox_element.data
                 albm_dict[f"bboxes_{i}"] = [[*(data.coords.tolist()), data.class_label]]
-        if ElementType.keypoint in elements:
+        if "keypoint" in elements:
             raise NotImplementedError("Didn't fully implement keypoints in albumentations yet.")
-            # for i, keypoint in enumerate(elements[ElementType.keypoint]):
+            # for i, keypoint in enumerate(elements["keypoint"]):
             #     keypoint: Keypoint
             #     albm_dict[f"keypoints_{i}"] = keypoint.coords
         return albm_dict
 
     def _albm_to_elements(
         self,
-        elements: Dict[ElementType, List[Element]],
+        elements: Dict[str, List[Element]],
         albm_dict: Dict[str, Any],
-        cache_mechanisms: Dict[ElementType, CacheMechanism],
+        cache_mechanisms: Dict[str, CacheMechanism],
     ):
-        albm_to_elements = {"bboxes": ElementType.bbox, "keypoints": ElementType.keypoint, "image": ElementType.image}
+        albm_to_elements = {"bboxes": "bbox", "keypoints": "keypoint", "image": "image"}
         del albm_dict["image"]
         del albm_dict["bboxes"]
         del albm_dict["keypoints"]
@@ -97,14 +96,14 @@ class AlbumentationsCompose(SampleTransform):
     @staticmethod
     def _update_element_with_transformed_data(
         albm_data: Union[Image, List, np.ndarray],
-        cache_mechanisms: Dict[ElementType, CacheMechanism],
+        cache_mechanisms: Dict[str, CacheMechanism],
         curr_element: Element,
     ):
-        if curr_element.etype == ElementType.bbox:
+        if curr_element.etype == "bbox":
             albm_data = np.array(albm_data[0])
             new_element_data = BoundingBox(albm_data[:4], class_label=albm_data[4])  # noqa
             new_category = "obj"
-        elif curr_element.etype == ElementType.image:
+        elif curr_element.etype == "image":
             if isinstance(albm_data, np.ndarray):
                 new_category = "image"
             else:

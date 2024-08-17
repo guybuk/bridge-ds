@@ -13,7 +13,6 @@ if TYPE_CHECKING:
     from bridge.display import DisplayEngine
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
-    from bridge.primitives.element.element_type import ElementType
 
 
 class Element(Displayable):
@@ -22,7 +21,7 @@ class Element(Displayable):
     def __init__(
         self,
         element_id: Hashable,
-        etype: ElementType,
+        etype: str,
         load_mechanism: LoadMechanism,
         sample_id: Hashable,
         display_engine: DisplayEngine | None = None,
@@ -55,7 +54,7 @@ class Element(Displayable):
         return data
 
     @property
-    def etype(self) -> ElementType:
+    def etype(self) -> str:
         return self._etype
 
     @property

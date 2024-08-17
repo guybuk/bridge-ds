@@ -10,7 +10,6 @@ if TYPE_CHECKING:
     from bridge.display.display_engine import DisplayEngine
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element import Element
-    from bridge.primitives.element.element_type import ElementType
     from bridge.primitives.sample import Sample
     from bridge.primitives.sample.transform import SampleTransform
 
@@ -29,7 +28,7 @@ class SampleAPI(abc.ABC):
         self,
         transform: SampleTransform,
         map_fn=tmap,
-        cache_mechanisms: Dict[ElementType, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
         pass

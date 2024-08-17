@@ -11,7 +11,6 @@ from bridge.display.basic import SimplePrints
 from bridge.primitives.dataset import SingularDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample.singular_sample import SingularSample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils import download_and_extract_archive, optional_dependencies
@@ -26,9 +25,7 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
     def __init__(self, root: str | os.PathLike):
         self._root = root
 
-    def build_dataset(
-        self, display_engine: DisplayEngine = None, cache_mechanisms: Dict[ElementType, CacheMechanism] = None
-    ):
+    def build_dataset(self, display_engine: DisplayEngine = None, cache_mechanisms: Dict[str, CacheMechanism] = None):
         images = []
         classes = []
         for i, class_dir in enumerate(sorted(Path(self._root).iterdir())):
@@ -37,14 +34,14 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
                 img_element = Element(
                     element_id=f"image_{sample_id}",
                     sample_id=sample_id,
-                    etype=ElementType.image,
+                    etype="image",
                     load_mechanism=LoadMechanism.from_url_string(str(img_file), category="image"),
                     metadata={"filename": img_file.name},
                 )
                 class_element = Element(
                     element_id=f"class_{i}",
                     sample_id=sample_id,
-                    etype=ElementType.class_label,
+                    etype="class_label",
                     load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), category="obj"),
                     metadata={"filename": img_file.name},
                 )
@@ -95,7 +92,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
     def build_dataset(
         self,
         display_engine: DisplayEngine = SimplePrints(),
-        cache_mechanisms: Dict[ElementType, CacheMechanism] = None,
+        cache_mechanisms: Dict[str, CacheMechanism] = None,
     ):
         img_id_list = list(sorted(self._coco.imgs.keys()))
         images = []
@@ -112,7 +109,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
             img_element = Element(
                 element_id=f"{img_id}_img",
                 sample_id=img_id,
-                etype=ElementType.image,
+                etype="image",
                 load_mechanism=load_mechanism,
                 metadata={k: v for k, v in coco_img.items() if k not in Element.keys and k != "id"},
             )
@@ -125,7 +122,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
                 bbox_element = Element(
                     element_id=f"{img_id}_{coco_ann_dict['id']}",
                     sample_id=img_id,
-                    etype=ElementType.bbox,
+                    etype="bbox",
                     load_mechanism=load_mechanism,
                     metadata={
                         "category_id": category_id,
@@ -149,20 +146,20 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
     def build_dataset(
         self,
         display_engine: DisplayEngine = SimplePrints(),
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
         sample_list = []
         annotation_list = []
         for i, (img, target) in enumerate(zip(self._ds.data, self._ds.targets)):
             img_element = Element(
                 element_id=i,
-                etype=ElementType.image,
+                etype="image",
                 sample_id=i,
                 load_mechanism=LoadMechanism(url_or_data=img, category="image"),
             )
             label_element = Element(
                 element_id=f"label_{i}",
-                etype=ElementType.class_label,
+                etype="class_label",
                 sample_id=i,
                 load_mechanism=LoadMechanism(
                     url_or_data=ClassLabel(class_idx=target, class_name=self._ds.classes[target]),

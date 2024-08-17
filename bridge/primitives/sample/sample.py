@@ -7,7 +7,6 @@ import pandas as pd
 
 from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.element.element_type import ElementType
 from bridge.utils.constants import ELEMENT_COLS, INDICES
 from bridge.utils.helper import Displayable
 
@@ -22,7 +21,7 @@ class Sample(Displayable):
 
     def __init__(
         self,
-        elements: List[Element] | Dict[ElementType, List[Element]],
+        elements: List[Element] | Dict[str, List[Element]],
         display_engine: DisplayEngine | None = None,
     ):
         if isinstance(elements, dict):
@@ -41,11 +40,11 @@ class Sample(Displayable):
                 return e_list[0].sample_id
 
     @property
-    def elements(self) -> Dict[ElementType, List[Element]]:
+    def elements(self) -> Dict[str, List[Element]]:
         return self._elements
 
     @property
-    def data(self) -> Dict[ElementType, List[ELEMENT_DATA_TYPE]]:
+    def data(self) -> Dict[str, List[ELEMENT_DATA_TYPE]]:
         data_dict = defaultdict(list)
         for etype, elist in self._elements.items():
             data_dict[etype].extend([e.data for e in elist])
@@ -57,7 +56,7 @@ class Sample(Displayable):
     def transform(
         self,
         transform: SampleTransform,
-        cache_mechanisms: Dict[ElementType, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> "Sample":
         cache_mechanisms = self._get_cache_mechanisms_for_transform(self, cache_mechanisms)
@@ -71,7 +70,7 @@ class Sample(Displayable):
         cls,
         elements_df: pd.DataFrame,
         display_engine: DisplayEngine | None,
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None],
+        cache_mechanisms: Dict[str, CacheMechanism | None],
     ):
         def fast_to_dict_records(df):
             data = df.values.tolist()
@@ -87,7 +86,7 @@ class Sample(Displayable):
         for element_row in fast_to_dict_records(elements_df):
             etype = element_row[ELEMENT_COLS.ETYPE]
 
-            element_type = ElementType(etype)
+            element_type = str(etype)
             elements.append(
                 Element.from_dict(
                     element_row,
@@ -108,7 +107,7 @@ class Sample(Displayable):
         return sum(map(len, self._elements.values()))
 
     @staticmethod
-    def _assert_valid_elements(elements: Dict[ElementType, List[Element]]):
+    def _assert_valid_elements(elements: Dict[str, List[Element]]):
         sample_ids_from_elements = set([e.sample_id for e_list in elements.values() for e in e_list])
         assert len(sample_ids_from_elements) == 1, (
             f"All elements must contain a single sample id,"
@@ -116,15 +115,15 @@ class Sample(Displayable):
         )
 
     @staticmethod
-    def _convert_elements_list_to_dict(elements: List[Element]) -> Dict[ElementType, List[Element]]:
-        elements_by_type: Dict[ElementType, List[Element]] = defaultdict(list)
+    def _convert_elements_list_to_dict(elements: List[Element]) -> Dict[str, List[Element]]:
+        elements_by_type: Dict[str, List[Element]] = defaultdict(list)
         for element in elements:
             elements_by_type[element.etype].append(element)
         d = dict(elements_by_type)
         return d
 
     @staticmethod
-    def _get_cache_mechanisms_for_transform(sample: Sample, cache_mechanisms: Dict[ElementType, CacheMechanism] | None):
+    def _get_cache_mechanisms_for_transform(sample: Sample, cache_mechanisms: Dict[str, CacheMechanism] | None):
         if cache_mechanisms is None:
             cache_mechanisms = {}
 

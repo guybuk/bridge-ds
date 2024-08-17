@@ -6,7 +6,6 @@ import numpy as np
 import pandas as pd
 
 from bridge.display.display_engine import DisplayEngine
-from bridge.primitives.element.element_type import ElementType
 from bridge.primitives.sample import Sample
 from bridge.utils import optional_dependencies
 
@@ -24,9 +23,9 @@ class Holoviews(DisplayEngine):
 
     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
         etype = element.etype
-        if etype == ElementType.image:
+        if etype == "image":
             plot = self._plot_single_image(element)
-        elif etype == ElementType.bbox:
+        elif etype == "bbox":
             plot = self._plot_single_bbox(element)
         else:
             raise NotImplementedError(f"Invalid etype: {etype}")
@@ -42,13 +41,13 @@ class Holoviews(DisplayEngine):
     ):
         import holoviews as hv
 
-        imgs = [self._plot_single_image(element) for element in sample.elements[ElementType.image]]
-        if ElementType.bbox in sample.elements:
-            bboxes = self._plot_list_of_bbox_or_class_labels(sample.elements[ElementType.bbox])
+        imgs = [self._plot_single_image(element) for element in sample.elements["image"]]
+        if "bbox" in sample.elements:
+            bboxes = self._plot_list_of_bbox_or_class_labels(sample.elements["bbox"])
         else:
             bboxes = hv.Overlay()
-        if ElementType.class_label in sample.elements:
-            class_labels = self._plot_list_of_bbox_or_class_labels(sample.elements[ElementType.class_label])
+        if "class_label" in sample.elements:
+            class_labels = self._plot_list_of_bbox_or_class_labels(sample.elements["class_label"])
         else:
             class_labels = hv.Overlay()
         for i in range(len(imgs)):
@@ -104,10 +103,10 @@ class Holoviews(DisplayEngine):
         rectangle_list = []
         for element in elements:
             data: BoundingBox = element.data
-            if element.etype == ElementType.bbox:
+            if element.etype == "bbox":
                 xyxy = self._extract_bbox_coords(data)
                 cl = data.class_label
-            elif element.etype == ElementType.class_label:  # assume cls
+            elif element.etype == "class_label":  # assume cls
                 xyxy = [np.nan, np.nan, np.nan, np.nan]
                 cl = data
             else:
@@ -122,7 +121,7 @@ class Holoviews(DisplayEngine):
             for i, group in hv_df.groupby("class"):
                 p = hv.Rectangles(group, label=i)
                 plots.append(p)
-            plots = hv.Overlay(plots).opts(hv.opts.Rectangles(**self._default_kwargs(ElementType.bbox)))
+            plots = hv.Overlay(plots).opts(hv.opts.Rectangles(**self._default_kwargs("bbox")))
             return plots
 
     def _extract_bbox_coords(self, data):
@@ -143,12 +142,12 @@ class Holoviews(DisplayEngine):
         return xyxy
 
     @staticmethod
-    def _default_kwargs(etype: ElementType) -> Dict[str, Any]:
+    def _default_kwargs(etype: str) -> Dict[str, Any]:
         import holoviews as hv
 
-        if etype == ElementType.image:
+        if etype == "image":
             return dict(aspect="equal", invert_yaxis=True, legend_position="left", xaxis=None, yaxis=None)
-        elif etype == ElementType.bbox:
+        elif etype == "bbox":
             return dict(fill_alpha=0.0, line_width=3, line_color=hv.Cycle("Category20"))
 
     @staticmethod

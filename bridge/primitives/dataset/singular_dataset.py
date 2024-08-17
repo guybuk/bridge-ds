@@ -14,7 +14,6 @@ if TYPE_CHECKING:
     from bridge.display import DisplayEngine
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element import Element
-    from bridge.primitives.element.element_type import ElementType
     from bridge.primitives.sample.transform import SampleTransform
 
 
@@ -31,7 +30,7 @@ class SingularDataset(Dataset):
         samples: pd.DataFrame,
         annotations: pd.DataFrame,
         display_engine: DisplayEngine = None,
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
         assert (
             len(
@@ -133,7 +132,7 @@ class SingularDataset(Dataset):
         self,
         transform: SampleTransform,
         map_fn=tmap,
-        cache_mechanisms: Dict[ElementType, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
         ds = super().transform_samples(
@@ -157,7 +156,7 @@ class SingularDataset(Dataset):
         samples_list: List[Element],
         annotations_list: List[Element],
         display_engine: DisplayEngine = None,
-        cache_mechanisms: Dict[ElementType, CacheMechanism | None] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
         sample_records = [s.to_dict() for s in samples_list]
         annotation_records = [a.to_dict() for a in annotations_list]
