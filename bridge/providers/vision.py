@@ -5,7 +5,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
 import numpy as np
-from tqdm import tqdm
 
 from bridge.display.basic import SimplePrints
 from bridge.primitives.dataset import SingularDataset
@@ -97,7 +96,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
         img_id_list = list(sorted(self._coco.imgs.keys()))
         images = []
         bboxes = []
-        for img_id in tqdm(img_id_list):
+        for img_id in img_id_list:
             coco_img = self._coco.loadImgs(img_id)[0]
             img_file = self._images_dir / coco_img["file_name"]
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Callable, Dict, Hashable, List, Sequence
 
 import pandas as pd
-from tqdm.contrib import tmap
 from typing_extensions import Self
 
 from bridge.primitives.dataset.dataset import Dataset
@@ -131,7 +130,7 @@ class SingularDataset(Dataset):
     def transform_samples(
         self,
         transform: SampleTransform,
-        map_fn=tmap,
+        map_fn=map,
         cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:

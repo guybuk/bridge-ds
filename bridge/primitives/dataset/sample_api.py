@@ -3,7 +3,6 @@ from __future__ import annotations
 import abc
 from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable, Iterable, Iterator, Sequence
 
-from tqdm.contrib import tmap
 from typing_extensions import Self
 
 if TYPE_CHECKING:
@@ -27,14 +26,14 @@ class SampleAPI(abc.ABC):
     def transform_samples(
         self,
         transform: SampleTransform,
-        map_fn=tmap,
+        map_fn=map,
         cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
         pass
 
     @abc.abstractmethod
-    def map_samples(self, function: Callable[[Sample], Any], map_fn=tmap) -> Sequence[Sample]:
+    def map_samples(self, function: Callable[[Sample], Any], map_fn=map) -> Sequence[Sample]:
         pass
 
     @abc.abstractmethod

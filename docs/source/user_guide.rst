@@ -1,79 +1,45 @@
 User Guide
 ==========
+Demos
+-----
 
-Key Concepts
-------------
+For high-level demos that showcase Bridge's capabilities, consider
+browsing the following notebooks:
 
-In this section you will learn the basics of Bridge. Start by
-reading about the key concepts, and then proceed to
-the guides below.
+Exploratory Data Analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Element
-^^^^^^^
+* :doc:`COCO Dataset EDA <notebooks/vision/fundamentals/coco_eda_demo>`
 
-An Element is the basic unit of data in a Dataset, from raw data
-objects such as images, text, audio, to various annotations such
-as class labels, bounding boxes, and segmentation maps. In
-essence,
-anything that constitutes a piece of information within the
-dataset can be an Element.
-
-Sample
-^^^^^^
-
-A Sample is a collection of Elements. It is our representation of
-a typical item-within-a-dataset.
-For example, an image with
-object detections constitutes a Sample, comprising a single image
-Element and multiple bounding box Elements.
-
-Dataset
-^^^^^^^
-
-A Dataset is a collection of Samples. It exposes the Table and
-Sample APIs.
-
-Table API
-^^^^^^^^^
-
-A general term for the set of functions and operators exposed by
-the
-Dataset which allows users to perform
-high-level operations with a user experience similar to Pandas -
-assign, query, sort, map, etc. In short, an API that
-allows users to treat any dataset as a DataFrame, where **every
-row is an element.**
-
-Sample API
-^^^^^^^^^^
-
-A general term for the set of functions and operators exposed by
-the Dataset which allows users to work on
-individual examples in the dataset in a meaningful manner.
-If the Table API is meant for high-level
-dataset management, then the Sample API is used for low-level
-operations
-like loading,
-caching, and transforming raw data (e.g. pixels, strings).
+Full Pipeline
+^^^^^^^^^^^^^
+* :doc:`COCO Dataset → Augmentations → Pytorch <notebooks/vision/processing_data/source2tensors_demo>`
 
 Guides
 ------
 
-Fundametals
-^^^^^^^^^^^
+While the demos provide a glimpse into Bridge's capabilities, the following guides will introduce you to the core concepts and
+design of Bridge, which will allow you to tailor it to your own needs.
 
-* :doc:`Sample API <notebooks/vision/fundamentals//sample_api>`
-* :doc:`Table API <notebooks/vision/fundamentals/table_api>`
+Fundamentals
+^^^^^^^^^^^^
+
+Start here to learn the basics of Bridge, namely how a Bridge Dataset is designed.
+
+* :doc:`The Sample API <notebooks/vision/fundamentals/sample_api>`
+* :doc:`The Table API <notebooks/vision/fundamentals/table_api>`
 
 Custom datasets
 ^^^^^^^^^^^^^^^
 
-* :doc:`Load Mechanism <notebooks/vision/custom_data/load_mechanism>`
-* :doc:`Dataset Provider <notebooks/vision/custom_data/dataset_provider>`
-* :doc:`Display Engine <notebooks/vision/custom_data/display_engine>`
+Learn how to create custom Bridge Datasets.
+
+* :doc:`Connect raw data to Bridge using Load Mechanisms <notebooks/vision/custom_data/load_mechanism>`
+* :doc:`Create a custom dataset with Dataset Providers <notebooks/vision/custom_data/dataset_provider>`
+* :doc:`Interact with your data using Display Engines <notebooks/vision/custom_data/display_engine>`
 
 Processing data
 ^^^^^^^^^^^^^^^
 
-* :doc:`Cache Mechanism <notebooks/vision/processing_data/cache_mechanism>`
-* :doc:`Sample Transform <notebooks/vision/processing_data/sample_transform>`
+* :doc:`Augment data using Sample Transforms <notebooks/vision/processing_data/sample_transform>`
+* :doc:`Save intermediate data with Cache Mechanisms <notebooks/vision/processing_data/cache_mechanism>`

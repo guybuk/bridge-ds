@@ -5,7 +5,6 @@ from types import GeneratorType
 from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable, Iterable, Iterator, List, Sequence
 
 import pandas as pd
-from tqdm.contrib import tmap
 from typing_extensions import Self
 
 from bridge.primitives.dataset.sample_api import SampleAPI
@@ -85,7 +84,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
     def transform_samples(
         self,
         transform: SampleTransform,
-        map_fn=tmap,
+        map_fn=map,
         cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
@@ -98,7 +97,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         elements = [element for sample in samples for e_list in sample.elements.values() for element in e_list]
         return Dataset.from_elements(elements, display_engine=display_engine)
 
-    def map_samples(self, function: Callable[[Sample], Any], map_fn=tmap):
+    def map_samples(self, function: Callable[[Sample], Any], map_fn=map):
         outputs = map_fn(function, self)
         if isinstance(outputs, GeneratorType):
             return list(outputs)
