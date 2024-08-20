@@ -19,12 +19,19 @@ import numpy as np
 from tqdm import tqdm
 
 
-def _urlretrieve(url: str, filename: Union[str, pathlib.Path], chunk_size: int = 1024 * 32) -> None:
+def _urlretrieve(
+    url: str, filename: Union[str, pathlib.Path], chunk_size: int = 1024 * 32, progress_bar: bool = False
+) -> None:
     with urllib.request.urlopen(urllib.request.Request(url)) as response:
-        with open(filename, "wb") as fh, tqdm(total=response.length) as pbar:
-            while chunk := response.read(chunk_size):
-                fh.write(chunk)
-                pbar.update(len(chunk))
+        with open(filename, "wb") as fh:
+            if progress_bar:
+                with tqdm(total=response.length) as pbar:
+                    for chunk in iter(lambda: response.read(chunk_size), b""):
+                        fh.write(chunk)
+                        pbar.update(len(chunk))
+            else:
+                for chunk in iter(lambda: response.read(chunk_size), b""):
+                    fh.write(chunk)
 
 
 def calculate_md5(fpath: Union[str, pathlib.Path], chunk_size: int = 1024 * 1024) -> str:
@@ -219,10 +226,11 @@ def _extract_tar(
         for member in tar_members:
             member_path = os.path.join(to_path, member.name)
             if member_path not in existing_files:
-                print(f"Extracting {member.name} to {to_path}")
+                # print(f"Extracting {member.name} to {to_path}")
                 tar.extract(member, to_path)
             else:
-                print(f"{member.name} already exists in {to_path}, skipping.")
+                pass
+                # print(f"{member.name} already exists in {to_path}, skipping.")
 
 
 _ZIP_COMPRESSION_MAP: Dict[str, int] = {

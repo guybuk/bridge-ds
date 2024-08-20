@@ -5,7 +5,6 @@ from bridge.display import DisplayEngine
 from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.element.element_type import ElementType
 from bridge.utils.constants import ELEMENT_COLS
 from bridge.utils.data_objects import BoundingBox, ClassLabel, Keypoint
 
@@ -66,7 +65,7 @@ def bad_load_mechanism_dict(request):
 def element_dict(load_mechanism_dict):
     return {
         ELEMENT_COLS.ID: "123",
-        ELEMENT_COLS.ETYPE: ElementType.image,
+        ELEMENT_COLS.ETYPE: "image",
         ELEMENT_COLS.SAMPLE_ID: 0,
         **load_mechanism_dict,
     }

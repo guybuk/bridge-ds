@@ -13,14 +13,11 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
     from bridge.primitives.element.element import Element
     from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
-    from bridge.primitives.element.element_type import ElementType
     from bridge.primitives.sample.transform import SampleTransform
 
 
 class SingularSample(Sample):
-    def __init__(
-        self, elements: List[Element] | Dict[ElementType, List[Element]], display_engine: DisplayEngine = None
-    ):
+    def __init__(self, elements: List[Element] | Dict[str, List[Element]], display_engine: DisplayEngine = None):
         super().__init__(elements, display_engine)
         self._set_element_and_annotations()
 
@@ -52,13 +49,13 @@ class SingularSample(Sample):
         return self._element.data
 
     @property
-    def annotations(self) -> Dict[ElementType, List[Element]]:
+    def annotations(self) -> Dict[str, List[Element]]:
         return self._annotations
 
     def transform(
         self,
         transform: SampleTransform,
-        cache_mechanisms: Dict[ElementType, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
         transformed_sample = super().transform(transform, cache_mechanisms, display_engine)

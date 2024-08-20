@@ -8,7 +8,6 @@ from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.primitives.element.element import Element
-from bridge.primitives.element.element_type import ElementType
 from bridge.utils.constants import ELEMENT_COLS
 from bridge.utils.data_objects import ClassLabel
 
@@ -24,7 +23,7 @@ def dummy_elements():
         img_element = Element(
             element_id=i,
             sample_id=i,
-            etype=ElementType.image,
+            etype="image",
             load_mechanism=LoadMechanism(
                 url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
                 category="obj",
@@ -33,7 +32,7 @@ def dummy_elements():
         lbl_element = Element(
             element_id=f"label_{i}",
             sample_id=i,
-            etype=ElementType.class_label,
+            etype="class_label",
             load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), category="obj"),
         )
         elements.extend([img_element, lbl_element])
@@ -51,7 +50,7 @@ def dummy_elements_2():
         img_element = Element(
             element_id=100 + i,
             sample_id=50 + i,
-            etype=ElementType.image,
+            etype="image",
             load_mechanism=LoadMechanism(
                 url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
                 category="obj",
@@ -60,7 +59,7 @@ def dummy_elements_2():
         lbl_element = Element(
             element_id=f"label_{100+i}",
             sample_id=50 + i,  # Adjusting sample_id to create overlap
-            etype=ElementType.class_label,
+            etype="class_label",
             load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), category="obj"),
         )
         elements.extend([img_element, lbl_element])
@@ -80,7 +79,7 @@ def dummy_dataset_2(dummy_elements_2):
 @pytest.fixture
 def dummy_classification_dataset_local_cache(tmp_path, dummy_elements):
     cache = CacheMechanism(URIComponents.from_str(str(tmp_path)))
-    return Dataset.from_elements(elements=dummy_elements, cache_mechanisms={ElementType.image: cache})
+    return Dataset.from_elements(elements=dummy_elements, cache_mechanisms={"image": cache})
 
 
 def test_repr(dummy_dataset):
@@ -89,9 +88,9 @@ def test_repr(dummy_dataset):
 
 
 def test_select_by_etype(dummy_dataset):
-    ds = dummy_dataset.select(lambda e: e[ELEMENT_COLS.ETYPE] == ElementType.class_label)
+    ds = dummy_dataset.select(lambda e: e[ELEMENT_COLS.ETYPE] == "class_label")
     assert len(ds) == 100
-    assert ElementType.image not in ds.elements[ELEMENT_COLS.ETYPE].drop_duplicates().to_list()
+    assert "image" not in ds.elements[ELEMENT_COLS.ETYPE].drop_duplicates().to_list()
 
 
 def test_select_by_sample_id(dummy_dataset):
@@ -110,15 +109,15 @@ def test_data(dummy_dataset):
     labels = []
     for sample in dummy_dataset:
         data_dict = sample.data
-        images.extend(data_dict[ElementType.image])
-        labels.extend(data_dict[ElementType.class_label])
+        images.extend(data_dict["image"])
+        labels.extend(data_dict["class_label"])
     assert all([isinstance(img, np.ndarray) for img in images])
     assert all([img.shape == (100, 100, 3) for img in images])
     assert all([isinstance(label, ClassLabel) for label in labels])
 
 
 def test_cache(dummy_classification_dataset_local_cache):
-    cache_path = str(dummy_classification_dataset_local_cache._cache_mechanisms[ElementType.image]._root_uri)
+    cache_path = str(dummy_classification_dataset_local_cache._cache_mechanisms["image"]._root_uri)
 
     # assert starting conditions: cache dir exists and is empty, all elements have object data rather than URI
     assert Path(cache_path).exists() and Path(cache_path).is_dir()
@@ -132,9 +131,7 @@ def test_cache(dummy_classification_dataset_local_cache):
         _ = sample.data
 
     image_schemes = (
-        dummy_classification_dataset_local_cache.elements.pipe(
-            lambda df_: df_.loc[df_[ELEMENT_COLS.ETYPE] == ElementType.image]
-        )
+        dummy_classification_dataset_local_cache.elements.pipe(lambda df_: df_.loc[df_[ELEMENT_COLS.ETYPE] == "image"])
         .data.apply(lambda d: d.scheme)
         .drop_duplicates()
         .values

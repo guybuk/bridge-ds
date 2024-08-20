@@ -4,7 +4,6 @@ from bridge.display import DisplayEngine
 from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.element.element_type import ElementType
 
 
 @pytest.fixture
@@ -19,7 +18,7 @@ def dummy_sample_id():
 
 @pytest.fixture
 def dummy_etype():
-    return ElementType.segmentation
+    return "segmentation"
 
 
 @pytest.fixture
@@ -71,7 +70,7 @@ def test_validate_metadata(load_mechanism_mock, display_engine_mock, cache_mecha
         Element(
             element_id=0,
             sample_id=0,
-            etype=ElementType.segmentation,
+            etype="segmentation",
             load_mechanism=load_mechanism_mock,
             display_engine=display_engine_mock,
             cache_mechanism=cache_mechanism_mock,
