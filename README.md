@@ -49,6 +49,7 @@ class-based, tab-completion-ey interface.
 ![Table Operations](docs/gifs/do_stuff.gif)
 
 **Augment**
+
 ![Transforms](docs/gifs/transform.gif)
 
 * **Explore data in your notebook:**
