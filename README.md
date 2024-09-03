@@ -34,45 +34,33 @@ class-based, tab-completion-ey interface.
 
 **Browse**
 
+Browse through your datasets with ease using an intuitive interface.
+
 ![Browse Datasets](docs/gifs/browse.gif)
 
 **Work with tables**
+
+View your data as tables.
 
 ![Table Interface](docs/gifs/tables.gif)
 
 **Plot your data**
 
+Visualize your data quickly and effectively with the exposed Pandas Plotting API.
+
 ![Plotting](docs/gifs/plot.gif)
 
 **Assign, sort and filter**
+
+Perform common data operations like assigning new columns, sorting, and filtering with Pandas-like syntax.
 
 ![Table Operations](docs/gifs/do_stuff.gif)
 
 **Augment**
 
-![Transforms](docs/gifs/transform.gif)
+Apply and visualize data augmentations directly within your workflow.
 
-* **Explore data in your notebook:**
-    
-    * Browse your data directly in your notebook, without
-      intermediary web-apps.
-* **Dataset as a table:**
-    
-    * Give your deep learning dataset a DataFrame
-      interface; making
-      cumbersome operations such as selections, sorting and
-      aggregations - easy.
-* **Agnostic to Deep Learning Engines:**
-    * Convert into a training-ready dataset
-      in your DL framework of choice.
-* **Transform and Debug:**
-    * Maintain full visibility into your
-      preprocessing/augmentation pipeline. See exactly which
-      inputs enter your model.
-* **Work with Arbitrary Sources**:
-    * Work with remote and local data together, seamlessly.
-* **Keep your data to yourself**:
-    * No need to upload your data to third parties.
+![Transforms](docs/gifs/transform.gif)
 
 # Installation
 
@@ -80,22 +68,52 @@ You can install the latest version of Bridge's from PyPI. It comes in a few flav
 
 *Core*: The core package includes the basic functionality of Bridge.
 
-```bash
+```console
 $ pip install bridge-ds
 ```
-*Vision*: The vision package includes the core package and additional functionality for working with image datasets.
+*Vision*: The vision package includes the core package and additional (opinionated) functionality for working with image datasets.
 
-
-```bash
+```console
 $ pip install bridge-ds[vision]
 ```
-*Dev*: The dev package includes the core package and additional tools for development.
 
-```bash
-$ pip install bridge-ds[dev]
-```
+* _NOTE_: to run the demo notebooks locally, you'll need the `vision` package.
 
-* _NOTE_: to run the notebooks you'll need both the `vision` and `dev` packages.
 # Documentation
 
 To learn more about bridge-ds, please visit the [official documentation](https://bridge-ds.readthedocs.io/).
+
+# Development
+
+## Setup
+```console
+$ git clone https://github.com/guybuk/bridge-ds.git
+$ cd bridge-ds
+$ pip install -e ".[dev]"
+
+# Testing
+$ pytest tests/core
+
+# Building the docs
+$ sudo apt install pandoc
+$ cd docs
+$ make html
+```
+
+## Roadmap
+
+bridge-ds is under active development, currently in a pre-alpha stage.
+
+The following is a rough roadmap of the planned features:
+
+- Video Support
+    - [ ] DataIO for video
+    - [ ] DisplayEngine (video player)
+    - [ ] DatasetProviders (for popular video datasets)
+    - [ ] Transforms (clipping, sampling, augmentation)
+- Text
+    - [ ] DatasetProviders
+    - [ ] DisplayEngine (adapt existing engine to work with classic text tasks: translation, Q&A, etc.)
+- Core
+    - [ ] DualDatasets (for tasks with two main elements e.g. image-image, image-text,text-text)
+    - [ ] Stress testing (currently have no capacity to test huge datasets)
