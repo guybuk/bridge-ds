@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 from typing_extensions import Self
 
-from bridge.primitives.element.data import data_io
+from bridge.primitives.element.data import category_registry
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.utils import Dictable
 from bridge.utils.constants import ELEMENT_COLS
@@ -17,7 +17,7 @@ class LoadMechanism(Dictable):
     keys = ELEMENT_COLS.LOAD_MECHANISM.list()
 
     def __init__(self, url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: str) -> None:
-        assert data_io.is_registered(category), f"Category {category} is not registered."
+        assert category_registry.is_registered(category), f"Category {category} is not registered."
         self._url_or_data = url_or_data
         self._category = category
 
@@ -30,7 +30,7 @@ class LoadMechanism(Dictable):
         return self._category
 
     def load_data(self) -> Any:
-        return data_io.load(self._url_or_data, self._category)
+        return category_registry.load(self._url_or_data, self._category)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
