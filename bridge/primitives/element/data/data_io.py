@@ -4,18 +4,10 @@ from typing import Any
 
 import numpy as np
 
+from bridge.primitives.element.data.category_registry import register
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
-
-REGISTRY = {}
-
-
-def register(cls):
-    if cls.category in REGISTRY:
-        raise ValueError(f"Category {cls.category} is already registered.")
-    REGISTRY[cls.category] = cls
-    return cls
 
 
 class DataIO(abc.ABC):
@@ -161,26 +153,3 @@ class ObjDataIO(DataIO):
         with open(path, "wb") as f:
             pickle.dump(data, f)
         return LoadMechanism.from_url_string(str(url), cls.category)
-
-
-def store(data: Any, url: URIComponents | None, category: str) -> LoadMechanism:
-    return REGISTRY[category].store(data, url)
-
-
-def load(url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: str) -> ELEMENT_DATA_TYPE:
-    return REGISTRY[category].load(url_or_data)
-
-
-def extension(category: str) -> str:
-    return REGISTRY[category].extension
-
-
-def is_registered(category: str) -> bool:
-    return category in REGISTRY
-
-
-def list_registered_categories() -> list[str]:
-    return list(REGISTRY.keys())
-
-
-__all__ = ["register", "store", "load", "extension", "is_registered", "list_registered_categories"]
