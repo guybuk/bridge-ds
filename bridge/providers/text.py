@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
-from bridge.display.basic import SimplePrints
+from bridge.display.text import Panel
 from bridge.primitives.dataset.singular_dataset import SingularDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
@@ -22,7 +22,7 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
     dataset_url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 
     def __init__(self, root: str | os.PathLike, split: str = "train", download: bool = False):
-        root = Path(root)
+        root = Path(root).expanduser()
 
         if download:
             if (root / "aclImdb_v1.tar.gz").exists():
@@ -33,7 +33,7 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine[SingularDataset, SingularSample] = SimplePrints(),
+        display_engine: DisplayEngine[SingularDataset, SingularSample] = Panel(),
         cache_mechanisms: Dict[str, CacheMechanism] = None,
     ) -> SingularDataset:
         samples = []
