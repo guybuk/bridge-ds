@@ -132,7 +132,7 @@ dependencies = [
 # referred to as "extras". For a more extensive definition see:
 # https://packaging.python.org/en/latest/specifications/dependency-specifiers/#extras
 [project.optional-dependencies]
-vision = ["scikit-image","pillow","holoviews","panel","hvplot","albumentations","tabulate"]
+vision = ["scikit-image","pillow","holoviews","panel","hvplot","albumentations","tabulate","jupyter_bokeh"]
 dev = ["pytest","pytest-mock","pre-commit","ipykernel","testbook","sphinx","nbsphinx"]
 #test = ["coverage"]
 
