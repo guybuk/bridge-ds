@@ -15,13 +15,13 @@ if TYPE_CHECKING:
     from bridge.utils.data_objects import BoundingBox
 
 
-class Holoviews(DisplayEngine):
+class Panel(DisplayEngine):
     def __init__(self, bbox_format: str = "xyxy") -> None:
         assert bbox_format in ["xyxy", "xywh", "cxcywh"]
         self._bbox_format = bbox_format
-        self._validate_dependencies()
 
     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
+        self._validate_dependencies()
         etype = element.etype
         if etype == "image":
             plot = self._plot_single_image(element)
@@ -39,6 +39,7 @@ class Holoviews(DisplayEngine):
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
     ):
+        self._validate_dependencies()
         import holoviews as hv
 
         imgs = [self._plot_single_image(element) for element in sample.elements["image"]]
@@ -61,6 +62,7 @@ class Holoviews(DisplayEngine):
         sample_plot_kwargs: Dict[str, Any] | None = None,
         dataset_plot_kwargs: Dict[str, Any] | None = None,
     ):
+        self._validate_dependencies()
         import panel as pn
 
         sample_ids = dataset.sample_ids
