@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
-from bridge.display.text import Panel
+from bridge.display.text import PanelTextClassification
 from bridge.primitives.dataset.singular_dataset import SingularDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
@@ -33,7 +33,7 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine[SingularDataset, SingularSample] = Panel(),
+        display_engine: DisplayEngine[SingularDataset, SingularSample] = PanelTextClassification(),
         cache_mechanisms: Dict[str, CacheMechanism] = None,
     ) -> SingularDataset:
         samples = []

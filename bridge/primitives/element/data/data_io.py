@@ -153,3 +153,33 @@ class ObjDataIO(DataIO):
         with open(path, "wb") as f:
             pickle.dump(data, f)
         return LoadMechanism.from_url_string(str(url), cls.category)
+
+
+@register
+class AviDataIO(DataIO):
+    category = "avi"
+    extension = ".avi"
+
+    @classmethod
+    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+        if not isinstance(url_or_data, URIComponents):
+            return url_or_data
+        import cv2
+        from PIL import Image
+
+        video = cv2.VideoCapture(str(url_or_data))
+        return video
+        frames = []
+
+        while True:
+            ret, frame = video.read()
+            if not ret:
+                break
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(Image.fromarray(frame_rgb))
+        video.release()
+        return frames
+
+    @classmethod
+    def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
+        raise NotImplementedError()

@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from bridge.primitives.element.element import Element
 
 
-class Panel(DisplayEngine[SingularDataset, SingularSample]):
+class PanelTextClassification(DisplayEngine[SingularDataset, SingularSample]):
     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
         if element.etype == "class_label":
             return pn.pane.Markdown(element.to_pd_series().to_frame().T.to_markdown())

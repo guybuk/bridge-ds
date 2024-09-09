@@ -7,8 +7,6 @@ from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable, Iterable, Itera
 import pandas as pd
 from typing_extensions import Self
 
-from bridge.primitives.dataset.sample_api import SampleAPI
-from bridge.primitives.dataset.table_api import TableAPI
 from bridge.primitives.sample import Sample
 from bridge.utils.constants import ELEMENT_COLS, INDICES
 from bridge.utils.helper import Displayable
@@ -20,13 +18,14 @@ if TYPE_CHECKING:
     from bridge.primitives.sample.transform import SampleTransform
 
 
-class Dataset(TableAPI, SampleAPI, Displayable):
+class Dataset(Displayable):
     def __init__(
         self,
         elements: pd.DataFrame,
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
+        """ """
         self._elements = elements
         self._display_engine = display_engine
         self._cache_mechanisms = cache_mechanisms or {}

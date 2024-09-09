@@ -21,8 +21,4 @@ def tb(request):
 
 # @pytest.mark.skip(reason="This test needs to be moved to the correct location")
 def test_notebook(tb):
-    with tb.patch("tempfile.mkdtemp", return_value=str(DATA_DIR)):
-        for cell in tb.cells:
-            if "!pip install bridge-ds" in cell["source"]:
-                cell["source"] = cell["source"].replace("!pip install bridge-ds", "")
-        tb.execute()
+    tb.execute()

@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from bridge.utils.data_objects import BoundingBox
 
 
-class Panel(DisplayEngine):
+class PanelDetectionClassification(DisplayEngine):
     def __init__(self, bbox_format: str = "xyxy") -> None:
         assert bbox_format in ["xyxy", "xywh", "cxcywh"]
         self._bbox_format = bbox_format
@@ -71,7 +71,9 @@ class Panel(DisplayEngine):
         @pn.depends(sample_ids_wig.param.value)
         def plot_sample_by_widget(sample_id):
             return self.show_sample(
-                dataset.get(sample_id), element_plot_kwargs=element_plot_kwargs, sample_plot_kwargs=sample_plot_kwargs
+                dataset.get(sample_id),
+                element_plot_kwargs=element_plot_kwargs,
+                sample_plot_kwargs=sample_plot_kwargs,
             )
 
         return pn.Column(sample_ids_wig, plot_sample_by_widget)
@@ -131,11 +133,7 @@ class Panel(DisplayEngine):
             xyxy = data.coords
         elif self._bbox_format == "cxcywh":
             x, y, w, h = data.coords
-            xyxy = np.clip(
-                [x - w / 2, y - h / 2, x + w / 2, y + h / 2],
-                a_min=0,
-                a_max=None,
-            )
+            xyxy = np.clip([x - w / 2, y - h / 2, x + w / 2, y + h / 2], a_min=0, a_max=None)
         elif self._bbox_format == "xywh":
             x_min, y_min, w, h = data.coords
             xyxy = np.clip([x_min, y_min, x_min + w, y_min + h], a_min=0, a_max=None)
@@ -161,3 +159,100 @@ class Panel(DisplayEngine):
         assert (
             holoviews.Store.current_backend == "bokeh"
         ), f"Holoviews backend: {holoviews.Store.current_backend} is not supported."
+
+
+class PanelVideo(DisplayEngine):
+    def __init__(self, fps=10) -> None:
+        self._fps = fps
+
+    def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
+        self._validate_dependencies()
+        if element.etype != "video":
+            raise ValueError(f"Invalid etype: {element.etype}. Expected 'video'.")
+
+        frames = self._extract_frames(element.data)
+        return self._create_video_player(frames)
+
+    def show_sample(
+        self,
+        sample: Sample,
+        element_plot_kwargs: Dict[str, Any] | None = None,
+        sample_plot_kwargs: Dict[str, Any] | None = None,
+    ):
+        self._validate_dependencies()
+        import panel as pn
+
+        if "video" not in sample.elements or "class_label" not in sample.elements:
+            raise ValueError("Sample must contain 'video' and 'class_label' elements.")
+
+        video = sample.elements["video"][0]
+        class_label = sample.elements["class_label"][0].data
+        frames = self._extract_frames(video.data)
+
+        video_player = self._create_video_player(frames)
+
+        return pn.Column(pn.pane.Markdown(f"## Class Label: {class_label}", align="center"), video_player)
+
+    def show_dataset(
+        self,
+        dataset: Dataset,
+        element_plot_kwargs: Dict[str, Any] | None = None,
+        sample_plot_kwargs: Dict[str, Any] | None = None,
+        dataset_plot_kwargs: Dict[str, Any] | None = None,
+    ):
+        self._validate_dependencies()
+        import panel as pn
+
+        sample_ids = dataset.sample_ids
+        if not sample_ids:
+            raise ValueError("Dataset is empty.")
+
+        sample_ids_wig = pn.widgets.DiscreteSlider(name="Sample ID", options=sample_ids, value=sample_ids[0])
+
+        @pn.depends(sample_ids_wig.param.value)
+        def plot_sample_by_widget(sample_id):
+            return self.show_sample(
+                dataset.get(sample_id), element_plot_kwargs=element_plot_kwargs, sample_plot_kwargs=sample_plot_kwargs
+            )
+
+        return pn.Column(sample_ids_wig, plot_sample_by_widget)
+
+    @staticmethod
+    def _validate_dependencies():
+        with optional_dependencies("raise"):
+            import panel  # noqa
+            import cv2  # noqa
+            import PIL  # noqa
+
+    @staticmethod
+    def _extract_frames(video):
+        import cv2
+        from PIL import Image
+
+        frames = []
+        while True:
+            ret, frame = video.read()
+            if not ret:
+                break
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(Image.fromarray(frame_rgb))
+        video.release()
+
+        if not frames:
+            raise ValueError("No frames were extracted from the video.")
+
+        return frames
+
+    def _create_video_player(self, frames):
+        import panel as pn
+
+        player_wig = pn.widgets.Player(
+            name="Player", start=0, end=len(frames) - 1, value=0, loop_policy="loop", interval=1000 // self._fps
+        )
+
+        def show_frame(step):
+            return pn.pane.Image(frames[step])
+
+        fn = pn.param.ParamFunction(pn.bind(show_frame, player_wig.param.value), inplace=True, align="center")
+
+        return pn.Column(fn, player_wig)
