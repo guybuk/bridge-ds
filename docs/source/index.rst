@@ -15,8 +15,8 @@ with a Pandas-like experience, and handle individual samples and raw data using 
 class-based, easy-to-work-with interface.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 2   
 
    getting_started
-   user_guide
+   user_guide/index
 

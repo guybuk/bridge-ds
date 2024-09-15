@@ -23,5 +23,21 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = "alabaster"
+html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+#
+nbsphinx_prolog = """
+{{ env.docname.split('/')[-1].replace('_', ' ').title() }}
+==========================================================
+
+`Download this notebook from GitHub <https://raw.githubusercontent.com/guybuk/bridge-ds/main/docs/source/{{env.docname}}.ipynb>`_
+
+.. raw:: html
+
+    <a target="_blank" href="https://colab.research.google.com/github/guybuk/bridge-ds/blob/main/docs/source/{{env.docname}}.ipynb">
+    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+    </a>
+|
+"""
+
+# nbsphinx_execute = "never"
