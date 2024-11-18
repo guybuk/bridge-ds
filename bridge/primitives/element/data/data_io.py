@@ -1,13 +1,17 @@
+from __future__ import annotations
+
 import abc
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import numpy as np
 
 from bridge.primitives.element.data.category_registry import register
-from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
-from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
+
+if TYPE_CHECKING:
+    from bridge.primitives.element.data.load_mechanism import LoadMechanism
+    from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
 
 
 class DataIO(abc.ABC):
@@ -23,7 +27,7 @@ class DataIO(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | "ELEMENT_DATA_TYPE") -> "ELEMENT_DATA_TYPE":
         pass
 
     @classmethod
@@ -38,7 +42,7 @@ class JPEGDataIO(DataIO):
     extension = ".jpg"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | "ELEMENT_DATA_TYPE") -> "ELEMENT_DATA_TYPE":
         if not isinstance(url_or_data, URIComponents):
             return np.array(url_or_data)  # assumes object is a PIL image or np.ndarray
 
@@ -49,9 +53,11 @@ class JPEGDataIO(DataIO):
         return imread(str(url_or_data))
 
     @classmethod
-    def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
+    def store(cls, data: Any, url: URIComponents | None) -> "LoadMechanism":
         import PIL.Image
         from skimage.io import imsave
+
+        from bridge.primitives.element.data.load_mechanism import LoadMechanism
 
         if url is None:
             return LoadMechanism(PIL.Image.fromarray(data), cls.category)
@@ -72,7 +78,7 @@ class TorchDataIO(DataIO):
     extension = ".pt"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | "ELEMENT_DATA_TYPE") -> "ELEMENT_DATA_TYPE":
         if not isinstance(url_or_data, URIComponents):
             return url_or_data  # assume that is already torch tensor
         import torch
@@ -80,7 +86,9 @@ class TorchDataIO(DataIO):
         return torch.load(str(url_or_data))
 
     @classmethod
-    def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
+    def store(cls, data: Any, url: URIComponents | None) -> "LoadMechanism":
+        from bridge.primitives.element.data.load_mechanism import LoadMechanism
+
         if url is None:
             return LoadMechanism(data, cls.category)
 
@@ -101,13 +109,13 @@ class NumpyDataIO(DataIO):
     extension = ".npy"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | "ELEMENT_DATA_TYPE") -> "ELEMENT_DATA_TYPE":
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
         return np.load(str(url_or_data))
 
     @classmethod
-    def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
+    def store(cls, data: Any, url: URIComponents | None) -> "LoadMechanism":
         raise NotImplementedError()
 
 
@@ -117,13 +125,13 @@ class TextDataIO(DataIO):
     extension = ".txt"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | "ELEMENT_DATA_TYPE") -> "ELEMENT_DATA_TYPE":
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
         return open(str(url_or_data), "r").read()
 
     @classmethod
-    def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
+    def store(cls, data: Any, url: URIComponents | None) -> "LoadMechanism":
         raise NotImplementedError()
 
 
@@ -133,13 +141,15 @@ class ObjDataIO(DataIO):
     extension = ".pkl"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | "ELEMENT_DATA_TYPE") -> "ELEMENT_DATA_TYPE":
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
         raise NotImplementedError()
 
     @classmethod
-    def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
+    def store(cls, data: Any, url: URIComponents | None) -> "LoadMechanism":
+        from bridge.primitives.element.data.load_mechanism import LoadMechanism
+
         if url is None:
             return LoadMechanism(data, cls.category)
 

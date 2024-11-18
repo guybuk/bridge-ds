@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Dict, Hashable, List
+from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Optional
 
 import pandas as pd
 
@@ -49,6 +49,21 @@ class Sample(Displayable):
         for etype, elist in self._elements.items():
             data_dict[etype].extend([e.data for e in elist])
         return dict(data_dict)
+
+    def copy(self, new_sample_id: Optional[Hashable] = None, new_element_id_suffix="") -> Element:
+        if new_sample_id is not None:
+            sid = new_sample_id
+        else:
+            sid = self._sample_id
+
+        new_elements = {}
+        for etype, element_list in self._elements.items():
+            new_elements[etype] = []
+            for element in element_list:
+                new_elements[etype].append(
+                    element.copy(new_element_id=f"{element.id}{new_element_id_suffix}", new_sample_id=sid)
+                )
+        return Sample(elements=new_elements, display_engine=self._display_engine)
 
     def show(self, **kwargs: Any):
         return self._display_engine.show_sample(self, **kwargs)

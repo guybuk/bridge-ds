@@ -91,3 +91,40 @@ def test_element_static_properties(
 def test_element_data(dummy_element, load_mechanism_mock, cache_mechanism_mock):
     assert dummy_element.data == load_mechanism_mock.load_data()
     assert cache_mechanism_mock.store.called
+
+
+def test_element_copy(load_mechanism_mock):
+    # Setup
+    element_id = "test_id"
+    sample_id = "sample_1"
+    etype = "image"
+    metadata = {"key": "value"}
+
+    original = Element(
+        element_id=element_id, etype=etype, load_mechanism=load_mechanism_mock, sample_id=sample_id, metadata=metadata
+    )
+
+    # Test case 1: Copy without changing IDs
+    copied = original.copy()
+    assert copied.id == original.id
+    assert copied.sample_id == original.sample_id
+    assert copied.etype == original.etype
+    assert copied.metadata == original.metadata
+    assert copied._load_mechanism == original._load_mechanism
+
+    # Test case 2: Copy with new element_id
+    new_element_id = "new_test_id"
+    copied_new_eid = original.copy(new_element_id=new_element_id)
+    assert copied_new_eid.id == new_element_id
+    assert copied_new_eid.sample_id == original.sample_id
+
+    # Test case 3: Copy with new sample_id
+    new_sample_id = "new_sample_id"
+    copied_new_sid = original.copy(new_sample_id=new_sample_id)
+    assert copied_new_sid.id == original.id
+    assert copied_new_sid.sample_id == new_sample_id
+
+    # Test case 4: Copy with both new IDs
+    copied_both = original.copy(new_element_id=new_element_id, new_sample_id=new_sample_id)
+    assert copied_both.id == new_element_id
+    assert copied_both.sample_id == new_sample_id

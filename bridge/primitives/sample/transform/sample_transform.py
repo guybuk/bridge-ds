@@ -12,9 +12,6 @@ if TYPE_CHECKING:
 class SampleTransform(ABC):
     @abstractmethod
     def __call__(
-        self,
-        sample: Sample,
-        cache_mechanisms: Dict[str, CacheMechanism] | None,
-        display_engine: DisplayEngine | None,
+        self, sample: Sample, cache_mechanisms: Dict[str, CacheMechanism] | None, display_engine: DisplayEngine | None
     ) -> Sample:
         pass

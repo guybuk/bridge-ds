@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Hashable
+from typing import TYPE_CHECKING, Any, Dict, Hashable, Optional
 
 import pandas as pd
 
@@ -72,6 +72,26 @@ class Element(Displayable):
     def __str__(self) -> str:
         return str(self.to_dict())
 
+    def copy(self, new_element_id: Optional[Hashable] = None, new_sample_id: Optional[Hashable] = None) -> Element:
+        if new_element_id is not None:
+            eid = new_element_id
+        else:
+            eid = self._element_id
+
+        if new_sample_id is not None:
+            sid = new_sample_id
+        else:
+            sid = self._sample_id
+
+        return Element(
+            element_id=eid,
+            sample_id=sid,
+            load_mechanism=self._load_mechanism,
+            cache_mechanism=self._cache_mechanism,
+            metadata=self._metadata,
+            etype=self._etype,
+        )
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             ELEMENT_COLS.ID: self.id,
@@ -110,9 +130,7 @@ class Element(Displayable):
         cache_mechanism: CacheMechanism | None = None,
     ):
         return cls.from_dict(
-            {**element_series.to_dict()},
-            display_engine=display_engine,
-            cache_mechanism=cache_mechanism,
+            {**element_series.to_dict()}, display_engine=display_engine, cache_mechanism=cache_mechanism
         )
 
     def show(self, **kwargs):

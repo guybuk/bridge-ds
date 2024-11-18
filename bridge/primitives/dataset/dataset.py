@@ -9,6 +9,7 @@ from typing_extensions import Self
 
 from bridge.primitives.dataset.sample_api import SampleAPI
 from bridge.primitives.dataset.table_api import TableAPI
+from bridge.primitives.element.element import Element
 from bridge.primitives.sample import Sample
 from bridge.utils.constants import ELEMENT_COLS, INDICES
 from bridge.utils.helper import Displayable
@@ -16,7 +17,6 @@ from bridge.utils.helper import Displayable
 if TYPE_CHECKING:
     from bridge.display.display_engine import DisplayEngine
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
-    from bridge.primitives.element.element import Element
     from bridge.primitives.sample.transform import SampleTransform
 
 
@@ -92,16 +92,41 @@ class Dataset(TableAPI, SampleAPI, Displayable):
             Sample.transform, transform=transform, cache_mechanisms=cache_mechanisms, display_engine=display_engine
         )
         samples = map_fn(fn, self)
-        if isinstance(samples, GeneratorType):
+        if isinstance(samples, Iterable):
             samples = list(samples)
+        if isinstance(samples[0], list):
+            samples = [sample for sample_list in samples for sample in sample_list]
         elements = [element for sample in samples for e_list in sample.elements.values() for element in e_list]
-        return Dataset.from_elements(elements, display_engine=display_engine)
+        return Dataset.from_elements(elements, display_engine=display_engine, map_fn=map_fn)
 
     def map_samples(self, function: Callable[[Sample], Any], map_fn=map):
         outputs = map_fn(function, self)
         if isinstance(outputs, GeneratorType):
             return list(outputs)
         return outputs
+
+    def resample(self, function: Callable[[pd.DataFrame], Sequence[Hashable]]) -> Self:
+        new_sample_ids = function(self._elements)
+
+        # Get the relevant subset of elements, allowing for repeated sample IDs
+        subset = self._elements.loc[new_sample_ids]
+
+        # For duplicated samples, create unique suffixes using cumcount
+        counts = subset.groupby([ELEMENT_COLS.SAMPLE_ID, ELEMENT_COLS.ID]).cumcount()
+
+        # Create new unique IDs by appending suffix only when count > 0
+        new_index = []
+        for (sid, eid), count in zip(subset.index, counts):
+            if count == 0:
+                new_index.append((sid, eid))
+            else:
+                new_index.append((f"{sid}_dup_{count}", f"{eid}_dup_{count}"))
+
+        subset.index = pd.MultiIndex.from_tuples(new_index, names=[ELEMENT_COLS.SAMPLE_ID, ELEMENT_COLS.ID])
+        # Assign to new_elements and sort the index if needed
+        new_elements = subset.sort_index()
+
+        return Dataset(new_elements, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms)
 
     def show(self, **kwargs):
         return self._display_engine.show_dataset(self, **kwargs)
@@ -129,8 +154,9 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         elements: Iterable[Element],
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
+        map_fn=map,
     ) -> Self:
-        element_records = [e.to_pd_series() for e in elements]
+        element_records = map_fn(Element.to_pd_series, elements)
         elements_df = pd.DataFrame(element_records).set_index(INDICES)
         return cls(elements=elements_df, display_engine=display_engine, cache_mechanisms=cache_mechanisms)
 

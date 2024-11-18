@@ -102,9 +102,9 @@ def _pmap_dataloader(function: Callable, iterable: Sequence, n_jobs: int, progre
         ds, num_workers=n_jobs, collate_fn=collate, batch_size=None, batch_sampler=None, prefetch_factor=10
     )
     if progress_bar:
-        return list(tqdm(dataloader, total=len(ds), position=0, leave=True))
+        return tqdm(dataloader, total=len(ds), position=0, leave=True)
     else:
-        return list(dataloader)
+        return dataloader
 
 
 def _pmap_concurrent_futures(function: Callable, iterable: Sequence, n_jobs, progress_bar: bool):
@@ -130,9 +130,9 @@ def _pmap_concurrent_futures(function: Callable, iterable: Sequence, n_jobs, pro
         helper_instance = functools.partial(_helper, function)
     with concurrent.futures.ProcessPoolExecutor(max_workers=n_jobs) as p:
         if progress_bar:
-            return p.map(helper_instance, tqdm(iterable, total=len(iterable)))
-        else:
-            return p.map(helper_instance, iterable)
+            iterable = tqdm(iterable, total=len(iterable))
+        outputs = p.map(helper_instance, iterable)
+    return outputs
 
 
 def _helper(function, iterable, *args, **kwargs):

@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import copy
-from typing import TYPE_CHECKING, Any, Dict, List, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import albumentations as A
 import numpy as np
 from PIL.Image import Image
 
+from bridge.display import DisplayEngine
+from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.sample import Sample
 from bridge.primitives.sample.transform.sample_transform import SampleTransform
@@ -30,10 +32,7 @@ class AlbumentationsCompose(SampleTransform):
         self._transforms = albm_transforms
 
     def __call__(
-        self,
-        sample: Sample,
-        cache_mechanisms: Dict[str, CacheMechanism],
-        display_engine: DisplayEngine | None,
+        self, sample: Sample, cache_mechanisms: Dict[str, CacheMechanism], display_engine: DisplayEngine | None
     ) -> Sample:
         elements = copy.deepcopy(sample.elements)
         albm_dict = self._elements_to_albm(elements)
@@ -64,16 +63,10 @@ class AlbumentationsCompose(SampleTransform):
                 albm_dict[f"bboxes_{i}"] = [[*(data.coords.tolist()), data.class_label]]
         if "keypoint" in elements:
             raise NotImplementedError("Didn't fully implement keypoints in albumentations yet.")
-            # for i, keypoint in enumerate(elements["keypoint"]):
-            #     keypoint: Keypoint
-            #     albm_dict[f"keypoints_{i}"] = keypoint.coords
         return albm_dict
 
     def _albm_to_elements(
-        self,
-        elements: Dict[str, List[Element]],
-        albm_dict: Dict[str, Any],
-        cache_mechanisms: Dict[str, CacheMechanism],
+        self, elements: Dict[str, List[Element]], albm_dict: Dict[str, Any], cache_mechanisms: Dict[str, CacheMechanism]
     ):
         albm_to_elements = {"bboxes": "bbox", "keypoints": "keypoint", "image": "image"}
         del albm_dict["image"]
@@ -95,9 +88,7 @@ class AlbumentationsCompose(SampleTransform):
 
     @staticmethod
     def _update_element_with_transformed_data(
-        albm_data: Union[Image, List, np.ndarray],
-        cache_mechanisms: Dict[str, CacheMechanism],
-        curr_element: Element,
+        albm_data: Union[Image, List, np.ndarray], cache_mechanisms: Dict[str, CacheMechanism], curr_element: Element
     ):
         if curr_element.etype == "bbox":
             albm_data = np.array(albm_data[0])
@@ -128,3 +119,136 @@ class AlbumentationsCompose(SampleTransform):
             metadata=curr_element.metadata,
         )
         return curr_element
+
+
+class SliceImage:
+    def __init__(
+        self,
+        slice_height: int,
+        slice_width: int,
+        overlap_height_ratio: float,
+        overlap_width_ratio: float,
+        image_height: Optional[int] = None,
+        image_width: Optional[int] = None,
+        bbox_format: str = "pascal_voc",
+    ) -> None:
+        super().__init__()
+        self._slice_height = slice_height
+        self._slice_width = slice_width
+        self._overlap_height_ratio = overlap_height_ratio
+        self._overlap_width_ratio = overlap_width_ratio
+        self._image_height = image_height
+        self._image_width = image_width
+        self._bbox_format = bbox_format
+
+    def __call__(
+        self,
+        sample: Sample,
+        cache_mechanisms: Dict[str, CacheMechanism] | None,
+        display_engine: DisplayEngine | None,
+    ) -> List[Sample]:
+        image_element = sample.element
+        metadata = image_element.metadata
+
+        # Try to get dimensions from metadata first
+        image_height = metadata.get("height")
+        image_width = metadata.get("width")
+
+        # Fall back to instance variables if not in metadata
+        if image_height is None:
+            image_height = self._image_height
+        if image_width is None:
+            image_width = self._image_width
+
+        # Raise exception if dimensions still not found
+        if image_height is None or image_width is None:
+            raise ValueError("Image dimensions not found in metadata or instance variables")
+
+        slice_bboxes = SliceImage.get_slice_bboxes(
+            image_height=image_height,
+            image_width=image_width,
+            slice_height=self._slice_height,
+            slice_width=self._slice_width,
+            overlap_height_ratio=self._overlap_height_ratio,
+            overlap_width_ratio=self._overlap_width_ratio,
+        )
+
+        # Create individual crop transforms for each slice
+        crop_transforms = []
+        for bbox in slice_bboxes:
+            x_min, y_min, x_max, y_max = bbox
+            crop = A.Crop(x_min=x_min, y_min=y_min, x_max=x_max, y_max=y_max)
+            crop_transforms.append(AlbumentationsCompose([crop], bbox_format=self._bbox_format))
+
+        # Apply each crop transform to create multiple samples
+        samples = []
+        for i, crop_transform in enumerate(crop_transforms):
+            # Transform the sample
+            transformed = sample.copy(
+                new_sample_id=f"{sample.id}_slice_{i}", new_element_id_suffix=f"_slice_{i}"
+            ).transform(crop_transform, cache_mechanisms, display_engine)
+
+            samples.append(transformed)
+
+        return samples
+
+    @staticmethod
+    def get_slice_bboxes(
+        image_height: int,
+        image_width: int,
+        slice_height: int,
+        slice_width: int,
+        overlap_height_ratio: float,
+        overlap_width_ratio: float,
+    ) -> List[List[int]]:
+        """Slices `image_pil` in crops.
+        Corner values of each slice will be generated using the `slice_height`,
+        `slice_width`, `overlap_height_ratio` and `overlap_width_ratio` arguments.
+
+        Args:
+            image_height (int): Height of the original image.
+            image_width (int): Width of the original image.
+            slice_height (int, optional): Height of each slice. Default None.
+            slice_width (int, optional): Width of each slice. Default None.
+            overlap_height_ratio(float): Fractional overlap in height of each
+                slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+                overlap of 20 pixels). Default 0.2.
+            overlap_width_ratio(float): Fractional overlap in width of each
+                slice (e.g. an overlap of 0.2 for a slice of size 100 yields an
+                overlap of 20 pixels). Default 0.2.
+            auto_slice_resolution (bool): if not set slice parameters such as slice_height and slice_width,
+                it enables automatically calculate these params from image resolution and orientation.
+
+        Returns:
+            List[List[int]]: List of 4 corner coordinates for each N slices.
+                [
+                    [slice_0_left, slice_0_top, slice_0_right, slice_0_bottom],
+                    ...
+                    [slice_N_left, slice_N_top, slice_N_right, slice_N_bottom]
+                ]
+        """
+        slice_bboxes = []
+        y_max = y_min = 0
+
+        if slice_height and slice_width:
+            y_overlap = int(overlap_height_ratio * slice_height)
+            x_overlap = int(overlap_width_ratio * slice_width)
+        else:
+            raise ValueError("Compute type is not auto and slice width and height are not provided.")
+
+        while y_max < image_height:
+            x_min = x_max = 0
+            y_max = y_min + slice_height
+            while x_max < image_width:
+                x_max = x_min + slice_width
+                if y_max > image_height or x_max > image_width:
+                    xmax = min(image_width, x_max)
+                    ymax = min(image_height, y_max)
+                    xmin = max(0, xmax - slice_width)
+                    ymin = max(0, ymax - slice_height)
+                    slice_bboxes.append([xmin, ymin, xmax, ymax])
+                else:
+                    slice_bboxes.append([x_min, y_min, x_max, y_max])
+                x_min = x_max - x_overlap
+            y_min = y_max - y_overlap
+        return slice_bboxes
