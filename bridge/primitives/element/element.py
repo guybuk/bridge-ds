@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Hashable, Optional
+from typing import TYPE_CHECKING, Any, Dict, Hashable
 
 import pandas as pd
 
@@ -72,24 +72,41 @@ class Element(Displayable):
     def __str__(self) -> str:
         return str(self.to_dict())
 
-    def copy(self, new_element_id: Optional[Hashable] = None, new_sample_id: Optional[Hashable] = None) -> Element:
-        if new_element_id is not None:
-            eid = new_element_id
-        else:
-            eid = self._element_id
+    def copy(
+        self,
+        element_id: Hashable | None = None,
+        etype: str | None = None,
+        load_mechanism: LoadMechanism | None = None,
+        sample_id: Hashable | None = None,
+        display_engine: DisplayEngine | None = None,
+        cache_mechanism: CacheMechanism | None = None,
+        metadata: Dict[str, Any] | None = None,
+    ) -> Element:
+        """Creates a copy of this Element with optionally modified attributes.
 
-        if new_sample_id is not None:
-            sid = new_sample_id
-        else:
-            sid = self._sample_id
+        Args:
+            element_id: New element ID. If None, uses current ID.
+            etype: New element type. If None, uses current type.
+            load_mechanism: New load mechanism. If None, uses current mechanism.
+            sample_id: New sample ID. If None, uses current sample ID.
+            display_engine: New display engine. If None, uses current engine.
+            cache_mechanism: New cache mechanism. If None, uses current mechanism.
+            metadata: New metadata dict. If None, uses current metadata.
+
+        Returns:
+            A new Element instance with the specified attributes.
+        """
+        if cache_mechanism is None and self._cache_mechanism is not None:
+            cache_mechanism = self._cache_mechanism.detached_copy()
 
         return Element(
-            element_id=eid,
-            sample_id=sid,
-            load_mechanism=self._load_mechanism,
-            cache_mechanism=self._cache_mechanism,
-            metadata=self._metadata,
-            etype=self._etype,
+            element_id=element_id if element_id is not None else self.id,
+            etype=etype if etype is not None else self.etype,
+            load_mechanism=load_mechanism if load_mechanism is not None else self._load_mechanism,
+            sample_id=sample_id if sample_id is not None else self.sample_id,
+            display_engine=display_engine if display_engine is not None else self._display_engine,
+            cache_mechanism=cache_mechanism,
+            metadata=metadata if metadata is not None else self.metadata.copy(),
         )
 
     def to_dict(self) -> Dict[str, Any]:

@@ -97,7 +97,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         if isinstance(samples[0], list):
             samples = [sample for sample_list in samples for sample in sample_list]
         elements = [element for sample in samples for e_list in sample.elements.values() for element in e_list]
-        return Dataset.from_elements(elements, display_engine=display_engine, map_fn=map_fn)
+        return Dataset.from_elements(elements, display_engine=display_engine)
 
     def map_samples(self, function: Callable[[Sample], Any], map_fn=map):
         outputs = map_fn(function, self)

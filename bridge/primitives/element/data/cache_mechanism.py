@@ -37,6 +37,9 @@ class CacheMechanism:
             self._update_samples_with_new_provider(element.id, new_provider)
         return new_provider
 
+    def detached_copy(self):
+        return CacheMechanism(root_uri=self._root_uri)
+
     def _build_uri(self, element: Element, category: str) -> URIComponents | None:
         if self._root_uri is None:
             return None

@@ -149,3 +149,60 @@ def test_merge_datasets(dummy_dataset, dummy_dataset_2):
     merged_ds = dummy_dataset.merge(dummy_dataset_2)
     assert len(merged_ds) == 150
     assert len(merged_ds.elements) == 400
+
+
+def test_resample_basic(dummy_dataset):
+    # Test simple resampling (selecting first two samples)
+    def sample_first_two(df):
+        return df.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).unique()[:2]
+
+    resampled = dummy_dataset.resample(sample_first_two)
+    assert len(resampled) == 2
+    assert resampled.sample_ids == [0, 1]
+
+
+def test_resample_with_duplicates(dummy_dataset):
+    # Test resampling with duplicates
+    def duplicate_first(df):
+        sample_ids = df.index.get_level_values(ELEMENT_COLS.SAMPLE_ID)
+        return [sample_ids[0], sample_ids[0]]  # Duplicate first sample
+
+    resampled = dummy_dataset.resample(duplicate_first)
+    assert len(resampled) == 2
+    assert set(resampled.sample_ids) == {0, "0_dup_1"}
+
+    # Check that element IDs are also uniquified
+    elements_df = resampled.elements
+    assert set(elements_df.index.get_level_values(ELEMENT_COLS.ID)) == {0, "0_dup_1", "label_0", "label_0_dup_1"}
+
+
+def test_resample_multiple_duplicates(dummy_dataset):
+    # Test resampling with multiple duplicates of the same sample
+    def triplicate_sample(df):
+        sample_ids = df.index.get_level_values(ELEMENT_COLS.SAMPLE_ID)
+        return [sample_ids[0]] * 3  # Triple the first sample
+
+    resampled = dummy_dataset.resample(triplicate_sample)
+    assert len(resampled) == 3
+    assert resampled.sample_ids == [0, "0_dup_1", "0_dup_2"]
+
+    # Check that element IDs are correctly numbered
+    elements_df = resampled.elements
+    assert set(elements_df.index.get_level_values(ELEMENT_COLS.ID)) == {
+        0,
+        "0_dup_1",
+        "0_dup_2",
+        "label_0",
+        "label_0_dup_1",
+        "label_0_dup_2",
+    }
+
+
+def test_resample_empty(dummy_dataset):
+    # Test resampling with empty selection
+    def empty_selection(df):
+        return []
+
+    resampled = dummy_dataset.resample(empty_selection)
+    assert len(resampled) == 0
+    assert resampled.sample_ids == []

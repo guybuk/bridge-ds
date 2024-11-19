@@ -93,38 +93,64 @@ def test_element_data(dummy_element, load_mechanism_mock, cache_mechanism_mock):
     assert cache_mechanism_mock.store.called
 
 
-def test_element_copy(load_mechanism_mock):
-    # Setup
+def test_element_copy(mocker, load_mechanism_mock, cache_mechanism_mock, display_engine_mock):
+    # Setup initial element
     element_id = "test_id"
+    etype = "test_type"
     sample_id = "sample_1"
-    etype = "image"
-    metadata = {"key": "value"}
+    metadata = {"key1": "value1"}
 
-    original = Element(
-        element_id=element_id, etype=etype, load_mechanism=load_mechanism_mock, sample_id=sample_id, metadata=metadata
+    element = Element(
+        element_id=element_id,
+        etype=etype,
+        load_mechanism=load_mechanism_mock,
+        sample_id=sample_id,
+        display_engine=display_engine_mock,
+        cache_mechanism=cache_mechanism_mock,
+        metadata=metadata,
     )
 
-    # Test case 1: Copy without changing IDs
-    copied = original.copy()
-    assert copied.id == original.id
-    assert copied.sample_id == original.sample_id
-    assert copied.etype == original.etype
-    assert copied.metadata == original.metadata
-    assert copied._load_mechanism == original._load_mechanism
+    # Test 1: Copy with no changes
+    copied = element.copy()
+    assert copied.id == element_id
+    assert copied.etype == etype
+    assert copied.sample_id == sample_id
+    assert copied._load_mechanism == load_mechanism_mock
+    assert copied._display_engine == display_engine_mock
+    assert copied.metadata == metadata
+    # Verify cache mechanism was detached
+    cache_mechanism_mock.detached_copy.assert_called_once()
 
-    # Test case 2: Copy with new element_id
-    new_element_id = "new_test_id"
-    copied_new_eid = original.copy(new_element_id=new_element_id)
-    assert copied_new_eid.id == new_element_id
-    assert copied_new_eid.sample_id == original.sample_id
+    # Test 2: Copy with modified attributes
+    new_id = "new_id"
+    new_etype = "new_type"
+    new_load_mechanism = mocker.Mock(spec=LoadMechanism)
+    new_metadata = {"key2": "value2"}
 
-    # Test case 3: Copy with new sample_id
-    new_sample_id = "new_sample_id"
-    copied_new_sid = original.copy(new_sample_id=new_sample_id)
-    assert copied_new_sid.id == original.id
-    assert copied_new_sid.sample_id == new_sample_id
+    modified = element.copy(
+        element_id=new_id, etype=new_etype, load_mechanism=new_load_mechanism, metadata=new_metadata
+    )
 
-    # Test case 4: Copy with both new IDs
-    copied_both = original.copy(new_element_id=new_element_id, new_sample_id=new_sample_id)
-    assert copied_both.id == new_element_id
-    assert copied_both.sample_id == new_sample_id
+    assert modified.id == new_id
+    assert modified.etype == new_etype
+    assert modified._load_mechanism == new_load_mechanism
+    assert modified.sample_id == sample_id  # Unchanged
+    assert modified._display_engine == display_engine_mock  # Unchanged
+    assert modified.metadata == new_metadata
+
+    # Test 3: Verify metadata is deeply copied
+    copied = element.copy()
+    assert copied.metadata is not element.metadata
+    copied.metadata["new_key"] = "new_value"
+    assert "new_key" not in element.metadata
+
+    # Test 4: Copy with None cache_mechanism
+    element_no_cache = Element(
+        element_id=element_id,
+        etype=etype,
+        load_mechanism=load_mechanism_mock,
+        sample_id=sample_id,
+        cache_mechanism=None,
+    )
+    copied_no_cache = element_no_cache.copy()
+    assert copied_no_cache._cache_mechanism is None
