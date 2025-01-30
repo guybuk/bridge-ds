@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Dict
 
 import numpy as np
 
-from bridge.display.vision import Panel
+from bridge.display.vision import PanelDetectionClassification, PanelVideo
 from bridge.primitives.dataset import SingularDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
@@ -25,7 +25,9 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
         self._root = root
 
     def build_dataset(
-        self, display_engine: DisplayEngine = Panel(), cache_mechanisms: Dict[str, CacheMechanism] = None
+        self,
+        display_engine: DisplayEngine = PanelDetectionClassification(),
+        cache_mechanisms: Dict[str, CacheMechanism] = None,
     ):
         images = []
         classes = []
@@ -92,7 +94,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine = Panel(bbox_format="xywh"),
+        display_engine: DisplayEngine = PanelDetectionClassification(bbox_format="xywh"),
         cache_mechanisms: Dict[str, CacheMechanism] = None,
     ):
         img_id_list = list(sorted(self._coco.imgs.keys()))
@@ -146,7 +148,7 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine = Panel(),
+        display_engine: DisplayEngine = PanelDetectionClassification(),
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
         sample_list = []
@@ -170,6 +172,39 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
             sample_list.append(img_element)
             annotation_list.append(label_element)
 
+        return SingularDataset.from_lists(
+            sample_list, annotation_list, display_engine=display_engine, cache_mechanisms=cache_mechanisms
+        )
+
+
+class UCF101(DatasetProvider[SingularDataset, SingularSample]):
+    def __init__(self, root: str | os.PathLike):
+        self._root = root
+
+    def build_dataset(
+        self,
+        display_engine: DisplayEngine = PanelVideo(),
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
+    ):
+        sample_list = []
+        annotation_list = []
+        for class_idx, class_dir in enumerate(sorted(Path(self._root).iterdir())):
+            for video_file in class_dir.iterdir():
+                vid_element = Element(
+                    element_id=f"{video_file.stem}_vid",
+                    etype="video",
+                    sample_id=video_file.stem,
+                    load_mechanism=LoadMechanism.from_url_string(str(video_file), category="avi"),
+                )
+                sample_list.append(vid_element)
+
+                label_element = Element(
+                    element_id=f"{video_file.stem}_cls",
+                    etype="class_label",
+                    sample_id=video_file.stem,
+                    load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx, class_dir.name), category="obj"),
+                )
+                annotation_list.append(label_element)
         return SingularDataset.from_lists(
             sample_list, annotation_list, display_engine=display_engine, cache_mechanisms=cache_mechanisms
         )

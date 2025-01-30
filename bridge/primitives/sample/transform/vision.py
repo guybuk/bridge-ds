@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+from collections import defaultdict
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import albumentations as A
@@ -8,10 +9,13 @@ import numpy as np
 
 from bridge.display import DisplayEngine
 from bridge.primitives.element.data.cache_mechanism import CacheMechanism
+from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.sample import Sample
+from bridge.primitives.sample.singular_sample import SingularSample
 from bridge.primitives.sample.transform.sample_transform import SampleTransform
 from bridge.utils import optional_dependencies
+from bridge.utils.constants import IS_SAMPLE_COL_NAME
 from bridge.utils.data_objects import BoundingBox
 
 if TYPE_CHECKING:
@@ -237,3 +241,83 @@ class SliceImage:
                 x_min = x_max - x_overlap
             y_min = y_max - y_overlap
         return slice_bboxes
+
+
+class VideoToFrames:
+    def __call__(
+        self,
+        sample: SingularSample,
+        cache_mechanisms: Dict[str, CacheMechanism] | None,
+        display_engine: DisplayEngine | None,
+    ) -> List[Sample]:
+        video_element = sample.element
+
+        frames = self._extract_frames(video_element.data)
+
+        samples = []
+
+        for i, frame in enumerate(frames):
+            elements = defaultdict(list)
+            # Transform the sample
+            new_sample_id = f"{sample.id}_frame_{i}"
+            new_element_id = f"{video_element.id}_frame_{i}"
+            frame_element = Element(
+                element_id=new_element_id,
+                sample_id=new_sample_id,
+                etype="image",
+                load_mechanism=LoadMechanism(frame, category="image"),
+                display_engine=display_engine,
+                cache_mechanism=cache_mechanisms.get("image"),
+                metadata={**video_element.metadata, IS_SAMPLE_COL_NAME: True},
+            )
+            new_load_mechanism = cache_mechanisms["image"].store(frame_element, frame_element.data)
+            frame_element = frame_element.copy(load_mechanism=new_load_mechanism)
+
+            for etype, elist in sample.elements.items():
+                if etype == "video":
+                    continue
+                elist = [ele.copy(element_id=f"{ele.id}_frame_{i}", sample_id=new_sample_id) for ele in elist]
+                elements[etype] = elist
+
+            elements["image"].append(frame_element)
+
+            frame_sample = SingularSample(elements=dict(elements))
+            samples.append(frame_sample)
+        return samples
+
+        #         import cv2
+        # from PIL import Image
+
+        # frames = []
+        # while True:
+        #     ret, frame = video.read()
+        #     if not ret:
+        #         break
+        #     frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #     frames.append(Image.fromarray(frame_rgb))
+        # video.release()
+
+        # if not frames:
+        #     raise ValueError("No frames were extracted from the video.")
+
+        # return frames
+        pass
+
+    @staticmethod
+    def _extract_frames(video):
+        import cv2
+        from PIL import Image
+
+        frames = []
+        while True:
+            ret, frame = video.read()
+            if not ret:
+                break
+            frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+            frames.append(Image.fromarray(frame_rgb))
+        video.release()
+
+        if not frames:
+            raise ValueError("No frames were extracted from the video.")
+
+        return frames
