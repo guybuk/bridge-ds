@@ -68,13 +68,31 @@ class Panel(DisplayEngine):
         sample_ids = dataset.sample_ids
         sample_ids_wig = pn.widgets.DiscreteSlider(name="Sample ID", options=sample_ids, value=sample_ids[0])
 
+        prev10_button = pn.widgets.Button(name="<< 10", button_type="primary")
+        prev_button = pn.widgets.Button(name="< Prev", button_type="primary")
+        next_button = pn.widgets.Button(name="Next >", button_type="primary")
+        next10_button = pn.widgets.Button(name="10 >>", button_type="primary")
+
+        def set_sample_id(delta):
+            idx = sample_ids.index(sample_ids_wig.value)
+            new_idx = max(0, min(len(sample_ids) - 1, idx + delta))
+            sample_ids_wig.value = sample_ids[new_idx]
+
+        prev10_button.on_click(lambda event: set_sample_id(-10))
+        prev_button.on_click(lambda event: set_sample_id(-1))
+        next_button.on_click(lambda event: set_sample_id(1))
+        next10_button.on_click(lambda event: set_sample_id(10))
+
         @pn.depends(sample_ids_wig.param.value)
         def plot_sample_by_widget(sample_id):
             return self.show_sample(
                 dataset.get(sample_id), element_plot_kwargs=element_plot_kwargs, sample_plot_kwargs=sample_plot_kwargs
             )
 
-        return pn.Column(sample_ids_wig, plot_sample_by_widget)
+        return pn.Column(
+            pn.Row(prev10_button, prev_button, sample_ids_wig, next_button, next10_button),
+            plot_sample_by_widget
+        )
 
     def _plot_single_image(self, element: Element):
         import holoviews as hv
