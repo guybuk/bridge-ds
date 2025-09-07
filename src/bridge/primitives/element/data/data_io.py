@@ -50,20 +50,18 @@ class JPEGDataIO(DataIO):
 
     @classmethod
     def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
-        import PIL.Image
-        from skimage.io import imsave
-
+        data = np.array(data)
         if url is None:
-            return LoadMechanism(PIL.Image.fromarray(data), cls.category)
+            return LoadMechanism(data, cls.category)
 
         if url.scheme not in ["", "file"]:
             raise NotImplementedError("Only saving locally is supported for now.")
+        from skimage.io import imsave
 
         path = Path(str(url)).expanduser()
-
         Path.mkdir(path.parent, parents=True, exist_ok=True)
         imsave(path, data)
-        return LoadMechanism.from_url_string(str(url), cls.category)
+        return LoadMechanism.from_url_string(str(path), cls.category)
 
 
 @register

@@ -79,7 +79,11 @@ class Panel(DisplayEngine):
     def _plot_single_image(self, element: Element):
         import holoviews as hv
 
-        data: np.ndarray = element.data
+        if element.category == "image":
+            data: np.ndarray = element.data
+        elif element.category == "torch":
+            data: np.ndarray = element.data.permute(1, 2, 0).numpy()
+
         etype = element.etype
         h, w = data.shape[0], data.shape[1]
         if len(data.shape) == 2:
@@ -87,6 +91,8 @@ class Panel(DisplayEngine):
             data = data[:, :, np.newaxis].repeat(3, axis=-1)
         img = hv.RGB(data[::-1, :, :], bounds=(0, 0, w, h)).opts(**self._default_kwargs(etype))
         return img
+
+    
 
     def _plot_single_bbox(self, element: Element):
         import holoviews as hv
