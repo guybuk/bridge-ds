@@ -191,10 +191,10 @@ class TorchvisionV2Transform(SampleTransform):
         if image_element.category == "image":
             # convert to PIL image
             image_data = Image.fromarray(image_data)
-            W,H = image_data.size
+            W, H = image_data.size
         elif image_element.category == "torch":
             image_data = tv_tensors.Image(image_data)
-            W,H = image_data.shape[1], image_data.shape[2]
+            W, H = image_data.shape[1], image_data.shape[2]
 
         # Convert bboxes to tv_tensors format with artificial labels
         bbox_coords = []
@@ -225,7 +225,7 @@ class TorchvisionV2Transform(SampleTransform):
         self, image_data: Any, bbox_tensor: tv_tensors.BoundingBoxes, labels_tensor: torch.Tensor
     ) -> tuple[Any, Any, torch.Tensor]:
         """Apply torchvision v2 transforms to tensors."""
-            # Apply transforms to image, bboxes, and labels together
+        # Apply transforms to image, bboxes, and labels together
         output_dict = self._transforms({"image": image_data, "boxes": bbox_tensor, "labels": labels_tensor})
         transformed_image = output_dict["image"]
         transformed_bboxes = output_dict["boxes"]

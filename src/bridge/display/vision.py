@@ -92,8 +92,6 @@ class Panel(DisplayEngine):
         img = hv.RGB(data[::-1, :, :], bounds=(0, 0, w, h)).opts(**self._default_kwargs(etype))
         return img
 
-    
-
     def _plot_single_bbox(self, element: Element):
         import holoviews as hv
 

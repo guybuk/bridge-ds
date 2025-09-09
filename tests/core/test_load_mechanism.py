@@ -1,5 +1,4 @@
 import pytest
-
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.utils.constants import ELEMENT_COLS
