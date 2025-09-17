@@ -39,8 +39,9 @@ dev = [
     "sphinx",
     "nbsphinx",
     "pycocotools>=2.0.10",
+    "pydata-sphinx-theme>=0.16.1",
 ]
 
 [tool.uv.build-backend]
 module-name = "bridge"
-module-root = "src"
+module-root = "."

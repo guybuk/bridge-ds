@@ -69,12 +69,12 @@ You can install the latest version of Bridge's from PyPI. It comes in a few flav
 *Core*: The core package includes the basic functionality of Bridge.
 
 ```console
-$ pip install bridge-ds
+$ uv add bridge-ds
 ```
 *Vision*: The vision package includes the core package and additional (opinionated) functionality for working with image datasets.
 
 ```console
-$ pip install bridge-ds[vision]
+$ uv add bridge-ds[vision]
 ```
 
 * _NOTE_: to run the demo notebooks locally, you'll need the `vision` package.

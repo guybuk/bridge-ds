@@ -15,8 +15,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10"]
-        dependencies: [ { "extras": "[dev]", "test_dir": "core", "additional_packages": ""},{ "extras": "[dev,vision]", "test_dir": "vision" , "additional_packages": "pip install pycocotools torch"} ]
+        python-version: ["3.11"]
+        dependencies: [ { "extras": [], "test_dir": "core" },{ "extras": ["vision"], "test_dir": "vision" } ]
 
     steps:
     - name: Free Disk Space (Ubuntu)
@@ -35,20 +35,26 @@ jobs:
         docker-images: true
         swap-storage: true
     - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
+      shell: bash
       run: |
-        python -m pip install --upgrade pip
-        pip install ".${{matrix.dependencies.extras}}"
-        ${{matrix.dependencies.additional_packages}}
-#    - name: pre-commit
-#      run: |
-#        pre-commit install
-#        pre-commit run --all-files
-#    - name: ipykernel
-#      run: python -m ipykernel install --user --name='python3'
+        # Install uv and add to PATH
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        source $HOME/.local/bin/env
+
+        # Parse extras from matrix into a bash array
+        extras_json='${{ toJson(matrix.dependencies.extras) }}'
+        extras=$(echo "$extras_json" | jq -r '.[]')
+
+        # Build uv sync command with all extras
+        cmd="uv sync"
+        for extra in $extras; do
+          cmd="$cmd --extra $extra"
+        done
+
+        echo "Running: $cmd"
+        eval $cmd
     - name: Test with pytest
-      run: pytest tests/${{ matrix.dependencies.test_dir }}
+      run: |
+        source .venv/bin/activate
+        python -m pytest tests/${{ matrix.dependencies.test_dir }}

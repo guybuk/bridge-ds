@@ -2,6 +2,7 @@ from unittest.mock import Mock
 
 import pandas as pd
 import pytest
+
 from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.utils.constants import INDICES
