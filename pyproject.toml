@@ -12,7 +12,6 @@ vision = [
     "holoviews",
     "panel",
     "hvplot",
-    "albumentations",
     "tabulate",
     "jupyter_bokeh",
 ]
