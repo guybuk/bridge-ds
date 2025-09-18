@@ -89,7 +89,7 @@ To learn more about bridge-ds, please visit the [official documentation](https:/
 ```console
 $ git clone https://github.com/guybuk/bridge-ds.git
 $ cd bridge-ds
-$ pip install -e ".[dev]"
+$ uv sync --all-extras
 
 # Testing
 $ pytest tests/core
