@@ -19,28 +19,5 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
 
-      - name: Get current version
-        id: get_version
-        run: |
-          VERSION=$(uv run python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-
-      - name: Check if version exists on PyPI
-        id: check_pypi
-        run: |
-          PACKAGE_NAME="bridge-ds"
-          VERSION="${{ steps.get_version.outputs.version }}"
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/${PACKAGE_NAME}/${VERSION}/json")
-          if [ "$HTTP_STATUS" = "200" ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build package
-        if: steps.check_pypi.outputs.exists == 'false'
-        run: uv build
-
-      - name: Publish to PyPI
-        if: steps.check_pypi.outputs.exists == 'false'
-        uses: pypa/gh-action-pypi-publish@release/v1
+      - name: Build and publish
+        run: uv build && uv publish --check-url https://pypi.org/simple/bridge-ds/
