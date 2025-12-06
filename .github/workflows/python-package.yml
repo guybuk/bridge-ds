@@ -19,35 +19,45 @@ jobs:
         dependencies: [ { "extras": [], "test_dir": "core" },{ "extras": ["vision"], "test_dir": "vision" } ]
 
     steps:
-    - name: Free Disk Space (Ubuntu)
-      uses: jlumbroso/free-disk-space@main
-      with:
-        # this might remove tools that are actually needed,
-        # if set to "true" but frees about 6 GB
-        tool-cache: false
+    # - name: Free Disk Space (Ubuntu)
+    #   uses: jlumbroso/free-disk-space@main
+    #   with:
+    #     # this might remove tools that are actually needed,
+    #     # if set to "true" but frees about 6 GB
+    #     tool-cache: false
 
-        # all of these default to true, but feel free to set to
-        # "false" if necessary for your workflow
-        android: true
-        dotnet: true
-        haskell: true
-        large-packages: true
-        docker-images: true
-        swap-storage: true
-    - uses: actions/checkout@v3
+    #     # all of these default to true, but feel free to set to
+    #     # "false" if necessary for your workflow
+    #     android: true
+    #     dotnet: true
+    #     haskell: true
+    #     large-packages: true
+    #     docker-images: true
+    #     swap-storage: true
+    - uses: actions/checkout@v6
+    # - uses: actions/setup-node@v4
+    #   with:
+    #     node-version: 20
+    # - name: Install yarn
+    #   shell: bash
+    #   run: |
+    #     npm install -g yarn
+    # - name: Install dependencies
+    #   shell: bash
+    #   run: |
+    #     npm install -g yarn
+    #     yarn install
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
     - name: Install dependencies
       shell: bash
       run: |
-        # Install uv and add to PATH
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        source $HOME/.local/bin/env
-
         # Parse extras from matrix into a bash array
         extras_json='${{ toJson(matrix.dependencies.extras) }}'
         extras=$(echo "$extras_json" | jq -r '.[]')
 
-        # Build uv sync command with all extras
-        cmd="uv sync"
+        # Build uv sync command with all extras````````````
+        cmd="uv sync --locked"
         for extra in $extras; do
           cmd="$cmd --extra $extra"
         done
@@ -56,5 +66,4 @@ jobs:
         eval $cmd
     - name: Test with pytest
       run: |
-        source .venv/bin/activate
-        python -m pytest tests/${{ matrix.dependencies.test_dir }}
+        uv run pytest tests/${{ matrix.dependencies.test_dir }}
