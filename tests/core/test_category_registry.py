@@ -1,5 +1,4 @@
 import pytest
-
 from bridge.primitives.element.data import category_registry
 
 

@@ -9,13 +9,13 @@ You can install the latest version of Bridge's from PyPI. It comes in a few flav
 
 .. code-block:: console
 
-    $ pip install bridge-ds
+    $ uv add bridge-ds
 
 *Vision*: The vision package includes the core package and additional (opinionated) functionality for working with image datasets.
 
 .. code-block:: console
 
-    $ pip install bridge-ds[vision]
+    $ uv add bridge-ds[vision]
 
 
 Key Concepts

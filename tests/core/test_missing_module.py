@@ -1,5 +1,4 @@
 import pytest
-
 from bridge.utils import optional_dependencies
 from bridge.utils.optional_import import _generate_msg  # noqa
 

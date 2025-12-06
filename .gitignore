@@ -25,7 +25,7 @@ tests/data
 # !yarn.lock
 # coverage/
 # cucumber-report.json
-# **/.venv*/
+**/.venv*/
 # port.txt
 # precommit.hook
 # pythonFiles/lib/**
