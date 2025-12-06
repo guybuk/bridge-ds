@@ -19,34 +19,22 @@ jobs:
         dependencies: [ { "extras": [], "test_dir": "core" },{ "extras": ["vision"], "test_dir": "vision" } ]
 
     steps:
-    # - name: Free Disk Space (Ubuntu)
-    #   uses: jlumbroso/free-disk-space@main
-    #   with:
-    #     # this might remove tools that are actually needed,
-    #     # if set to "true" but frees about 6 GB
-    #     tool-cache: false
+    - name: Free Disk Space (Ubuntu)
+      uses: jlumbroso/free-disk-space@main
+      with:
+        # this might remove tools that are actually needed,
+        # if set to "true" but frees about 6 GB
+        tool-cache: false
 
-    #     # all of these default to true, but feel free to set to
-    #     # "false" if necessary for your workflow
-    #     android: true
-    #     dotnet: true
-    #     haskell: true
-    #     large-packages: true
-    #     docker-images: true
-    #     swap-storage: true
+        # all of these default to true, but feel free to set to
+        # "false" if necessary for your workflow
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
     - uses: actions/checkout@v6
-    # - uses: actions/setup-node@v4
-    #   with:
-    #     node-version: 20
-    # - name: Install yarn
-    #   shell: bash
-    #   run: |
-    #     npm install -g yarn
-    # - name: Install dependencies
-    #   shell: bash
-    #   run: |
-    #     npm install -g yarn
-    #     yarn install
     - name: Install uv
       uses: astral-sh/setup-uv@v7
     - name: Install dependencies
