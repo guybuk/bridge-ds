@@ -1,4 +1,5 @@
 import pytest
+
 from bridge.display import DisplayEngine
 from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 from bridge.primitives.element.data.load_mechanism import LoadMechanism

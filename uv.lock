@@ -237,7 +237,7 @@ wheels = [
 
 [[package]]
 name = "bridge-ds"
-version = "0.0.0.post4"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "numpy" },
