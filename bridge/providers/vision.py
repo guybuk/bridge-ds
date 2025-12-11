@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Dict
 import numpy as np
 
 from bridge.display.vision import Panel
-from bridge.primitives.dataset import SingularDataset
+from bridge.primitives.dataset import MultiRoleDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.sample.singular_sample import SingularSample
+from bridge.primitives.sample import MultiRoleSample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils import download_and_extract_archive, optional_dependencies
 from bridge.utils.data_objects import BoundingBox, ClassLabel
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
-class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
+class ImageFolder(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
     def __init__(self, root: str | os.PathLike):
         self._root = root
 
@@ -28,7 +28,7 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
         self, display_engine: DisplayEngine = Panel(), cache_mechanisms: Dict[str, CacheMechanism] = None
     ):
         images = []
-        classes = []
+        labels = []
         for i, class_dir in enumerate(sorted(Path(self._root).iterdir())):
             for img_file in class_dir.iterdir():
                 sample_id = len(images)
@@ -39,21 +39,23 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
                     load_mechanism=LoadMechanism.from_url_string(str(img_file), category="image"),
                     metadata={"filename": img_file.name},
                 )
-                class_element = Element(
-                    element_id=f"class_{i}",
+                label_element = Element(
+                    element_id=f"label_{sample_id}",
                     sample_id=sample_id,
                     etype="class_label",
                     load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), category="obj"),
                     metadata={"filename": img_file.name},
                 )
                 images.append(img_element)
-                classes.append(class_element)
-        return SingularDataset.from_lists(
-            images, classes, display_engine=display_engine, cache_mechanisms=cache_mechanisms
+                labels.append(label_element)
+        return MultiRoleDataset.from_dict(
+            {"image": images, "label": labels},
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
         )
 
 
-class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
+class Coco2017Detection(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
     images_download_links = {
         "train": "http://images.cocodataset.org/zips/train2017.zip",
         "val": "http://images.cocodataset.org/zips/val2017.zip",
@@ -103,10 +105,10 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
             img_file = self._images_dir / coco_img["file_name"]
 
             if self._img_source == "stream":
-                url = coco_img["coco_url"]  # noqa
+                url = coco_img["coco_url"]
             else:
                 url = str(img_file)
-            load_mechanism = LoadMechanism.from_url_string(url, category="image")  # noqa
+            load_mechanism = LoadMechanism.from_url_string(url, category="image")
             img_element = Element(
                 element_id=f"{img_id}_img",
                 sample_id=img_id,
@@ -132,12 +134,14 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
                     },
                 )
                 bboxes.append(bbox_element)
-        return SingularDataset.from_lists(
-            images, bboxes, display_engine=display_engine, cache_mechanisms=cache_mechanisms
+        return MultiRoleDataset.from_dict(
+            {"image": images, "bbox": bboxes},
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
         )
 
 
-class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
+class TorchvisionCIFAR10(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
     def __init__(self, root: str | os.PathLike, train: bool = True, download: bool = False):
         with optional_dependencies("raise"):
             from torchvision.datasets import CIFAR10
@@ -149,8 +153,8 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
         display_engine: DisplayEngine = Panel(),
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
-        sample_list = []
-        annotation_list = []
+        images = []
+        labels = []
         for i, (img, target) in enumerate(zip(self._ds.data, self._ds.targets)):
             img_element = Element(
                 element_id=i,
@@ -167,9 +171,11 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
                     category="obj",
                 ),
             )
-            sample_list.append(img_element)
-            annotation_list.append(label_element)
+            images.append(img_element)
+            labels.append(label_element)
 
-        return SingularDataset.from_lists(
-            sample_list, annotation_list, display_engine=display_engine, cache_mechanisms=cache_mechanisms
+        return MultiRoleDataset.from_dict(
+            {"image": images, "label": labels},
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
         )

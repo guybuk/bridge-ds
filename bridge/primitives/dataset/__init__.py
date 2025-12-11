@@ -1,4 +1,4 @@
 from bridge.primitives.dataset.dataset import Dataset
-from bridge.primitives.dataset.singular_dataset import SingularDataset
+from bridge.primitives.dataset.multi_role_dataset import MultiRoleDataset
 
-__all__ = ["SingularDataset", "Dataset"]
+__all__ = ["Dataset", "MultiRoleDataset"]
