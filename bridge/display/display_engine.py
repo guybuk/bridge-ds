@@ -15,7 +15,7 @@ class DisplayEngine(ABC, Generic[D, S]):
         self,
         element: Element,
         element_plot_kwargs: Dict[str, Any] | None = None,
-    ):
+    ) -> Any:
         pass
 
     @abstractmethod
@@ -24,7 +24,7 @@ class DisplayEngine(ABC, Generic[D, S]):
         sample: S,
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
-    ):
+    ) -> Any:
         pass
 
     @abstractmethod
@@ -34,5 +34,5 @@ class DisplayEngine(ABC, Generic[D, S]):
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
         dataset_plot_kwargs: Dict[str, Any] | None = None,
-    ):
+    ) -> Any:
         pass

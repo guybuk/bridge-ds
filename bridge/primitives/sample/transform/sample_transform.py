@@ -14,7 +14,7 @@ class SampleTransform(ABC):
     def __call__(
         self,
         sample: Sample,
-        cache_mechanisms: Dict[str, CacheMechanism] | None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None,
         display_engine: DisplayEngine | None,
     ) -> Sample:
         pass

@@ -48,5 +48,6 @@ class CacheMechanism:
         return uri
 
     def _update_samples_with_new_provider(self, element_id: Hashable, new_provider: LoadMechanism):
+        assert self._elements is not None  # Set by store() caller check
         dic = new_provider.to_dict()
         self._elements.loc[(slice(None), element_id), list(dic.keys())] = dic.values()

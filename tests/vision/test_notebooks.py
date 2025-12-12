@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 
 NOTEBOOK_DIR = Path.cwd() / "docs" / "source" / "user_guide" / "notebooks"
-NOTEBOOKS_LIST = [p for p in NOTEBOOK_DIR.rglob("*[!\.ipynb_checkpoints]*.ipynb") if ".ipynb_checkpoints" not in str(p)]
+NOTEBOOKS_LIST = [
+    p for p in NOTEBOOK_DIR.rglob(r"*[!\.ipynb_checkpoints]*.ipynb") if ".ipynb_checkpoints" not in str(p)
+]
 
 
 @pytest.fixture(

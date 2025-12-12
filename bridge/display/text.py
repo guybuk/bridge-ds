@@ -6,14 +6,14 @@ import pandas as pd
 import panel as pn
 
 from bridge.display import DisplayEngine
-from bridge.primitives.dataset import SingularDataset
-from bridge.primitives.sample.singular_sample import SingularSample
+from bridge.primitives.dataset import Dataset
+from bridge.primitives.sample import Sample
 
 if TYPE_CHECKING:
     from bridge.primitives.element.element import Element
 
 
-class Panel(DisplayEngine[SingularDataset, SingularSample]):
+class Panel(DisplayEngine[Dataset, Sample]):
     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
         if element.etype == "class_label":
             return pn.pane.Markdown(element.to_pd_series().to_frame().T.to_markdown())
@@ -24,17 +24,20 @@ class Panel(DisplayEngine[SingularDataset, SingularSample]):
 
     def show_sample(
         self,
-        sample: SingularSample,
+        sample: Sample,
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
     ):
-        annotations_md = pd.DataFrame([ann.to_pd_series() for ann in sample.annotations["class_label"]]).to_markdown()
-        text_display = pn.pane.Markdown(sample.data)
+        class_labels = sample.elements.get("class_label", [])
+        annotations_md = pd.DataFrame([ann.to_pd_series() for ann in class_labels]).to_markdown()
+        text_elements = sample.elements.get("text", [])
+        text_data = text_elements[0].data if text_elements else ""
+        text_display = pn.pane.Markdown(text_data)
         return pn.Column("# Sample Text:", text_display, "# Annotations Data:", annotations_md)
 
     def show_dataset(
         self,
-        dataset: SingularDataset,
+        dataset: Dataset,
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
         dataset_plot_kwargs: Dict[str, Any] | None = None,

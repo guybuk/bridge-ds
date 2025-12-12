@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Tuple
+from typing import TYPE_CHECKING, Dict
 
 from bridge.display.paired import PairedPanel
-from bridge.primitives.dataset import MultiRoleDataset
+from bridge.primitives.dataset import PairedDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.sample import MultiRoleSample
+from bridge.primitives.sample import PairedSample
 from bridge.providers.dataset_provider import DatasetProvider
 
 if TYPE_CHECKING:
@@ -16,9 +16,11 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
-class ParallelCorpus(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
+class ParallelCorpus(DatasetProvider[PairedDataset, PairedSample]):
     """
     Provider for parallel text corpora (translation datasets).
+
+    Returns a PairedDataset with roles "source" and "target".
 
     Supports two formats:
     - Tab-separated file: source\\ttarget per line
@@ -26,40 +28,36 @@ class ParallelCorpus(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
 
     Example usage:
         # Tab-separated format
-        provider = ParallelCorpus("data/en-fr.tsv", role_names=("english", "french"))
+        provider = ParallelCorpus("data/en-fr.tsv")
+        ds = provider.build_dataset()
+        ds.source  # DataFrame of source text elements
+        ds.target  # DataFrame of target text elements
 
         # Separate files format
-        provider = ParallelCorpus(
-            "data/train.en",
-            target_file="data/train.fr",
-            role_names=("english", "french")
-        )
+        provider = ParallelCorpus("data/train.en", target_file="data/train.fr")
     """
 
     def __init__(
         self,
         source_file: str | os.PathLike,
         target_file: str | os.PathLike | None = None,
-        role_names: Tuple[str, str] = ("source", "target"),
         separator: str = "\t",
     ):
         """
         Args:
             source_file: Path to source language file (or combined file if target_file is None)
             target_file: Path to target language file (None if using tab-separated format)
-            role_names: Names for the two languages/roles
             separator: Separator for combined file format (default: tab)
         """
         self._source_file = Path(source_file)
         self._target_file = Path(target_file) if target_file else None
-        self._role_names = role_names
         self._separator = separator
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine = None,
+        display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
-    ) -> MultiRoleDataset:
+    ) -> PairedDataset:
         if display_engine is None:
             display_engine = PairedPanel()
 
@@ -112,8 +110,8 @@ class ParallelCorpus(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
                     source_elements.append(source_elem)
                     target_elements.append(target_elem)
 
-        return MultiRoleDataset.from_dict(
-            {self._role_names[0]: source_elements, self._role_names[1]: target_elements},
+        return PairedDataset.from_dict(
+            {"source": source_elements, "target": target_elements},
             display_engine=display_engine,
             cache_mechanisms=cache_mechanisms,
         )

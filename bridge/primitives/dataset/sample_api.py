@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import abc
-from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable, Iterable, Iterator, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Dict, Hashable, Iterable, Iterator
 
 from typing_extensions import Self
 
@@ -27,13 +27,13 @@ class SampleAPI(abc.ABC):
         self,
         transform: SampleTransform,
         map_fn=map,
-        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
         pass
 
     @abc.abstractmethod
-    def map_samples(self, function: Callable[[Sample], Any], map_fn=map) -> Sequence[Sample]:
+    def map_samples(self, function: Callable[[Sample], Any], map_fn=map) -> Any:
         pass
 
     @abc.abstractmethod

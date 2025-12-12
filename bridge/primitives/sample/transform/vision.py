@@ -33,7 +33,10 @@ class TorchvisionV2Transform(SampleTransform):
         self._bbox_format = bbox_format
 
     def __call__(
-        self, sample: Sample, cache_mechanisms: Dict[str, CacheMechanism], display_engine: DisplayEngine | None
+        self,
+        sample: Sample,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None,
+        display_engine: DisplayEngine | None,
     ) -> Sample:
         # Extract and validate required elements
         image_element, bbox_elements = self._extract_elements(sample)
@@ -75,6 +78,8 @@ class TorchvisionV2Transform(SampleTransform):
         """Convert elements to torchvision v2 tensor format."""
         # Convert image to tv_tensors format
         image_data = image_element.data
+        W: int
+        H: int
         if image_element.category == "image":
             # convert to PIL image
             image_data = Image.fromarray(image_data)
@@ -82,6 +87,8 @@ class TorchvisionV2Transform(SampleTransform):
         elif image_element.category == "torch":
             image_data = tv_tensors.Image(image_data)
             W, H = image_data.shape[1], image_data.shape[2]
+        else:
+            raise ValueError(f"Unsupported image category: {image_element.category}")
 
         # Convert bboxes to tv_tensors format with artificial labels
         bbox_coords = []
@@ -94,14 +101,14 @@ class TorchvisionV2Transform(SampleTransform):
         if bbox_coords:
             bbox_tensor = tv_tensors.BoundingBoxes(
                 torch.stack([torch.from_numpy(coord) for coord in bbox_coords]),
-                format=self._bbox_format,
+                format=self._bbox_format,  # type: ignore[arg-type]
                 canvas_size=(H, W),
             )
             labels_tensor = torch.tensor(bbox_labels)
         else:
             bbox_tensor = tv_tensors.BoundingBoxes(
                 torch.empty((0, 4)),
-                format=self._bbox_format,
+                format=self._bbox_format,  # type: ignore[arg-type]
                 canvas_size=(H, W),
             )
             labels_tensor = torch.empty(0, dtype=torch.long)
@@ -129,7 +136,7 @@ class TorchvisionV2Transform(SampleTransform):
         transformed_image: Any,
         transformed_bboxes: Any,
         transformed_labels: torch.Tensor,
-        cache_mechanisms: Dict[str, CacheMechanism],
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None,
     ) -> Dict[str, List[Element]]:
         """Reconstruct elements dict with transformed data."""
         # Start with a copy of all original elements to preserve untransformed ones
@@ -144,7 +151,7 @@ class TorchvisionV2Transform(SampleTransform):
         # The labels contain the original indices of the surviving bboxes
         surviving_bbox_elements = []
         for i, bbox_coords in enumerate(transformed_bboxes):
-            original_idx = transformed_labels[i].item()  # Get the original index from the label
+            original_idx = int(transformed_labels[i].item())  # Get the original index from the label
             if original_idx < len(bbox_elements):
                 original_bbox_element = bbox_elements[original_idx]
                 bbox_coords_np = bbox_coords.numpy()
@@ -161,9 +168,15 @@ class TorchvisionV2Transform(SampleTransform):
         return new_elements
 
     def _create_transformed_element(
-        self, original_element: Element, transformed_data: Any, cache_mechanisms: Dict[str, CacheMechanism]
+        self,
+        original_element: Element,
+        transformed_data: Any,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None,
     ) -> Element:
         """Create a new element with transformed data"""
+        if cache_mechanisms is None:
+            raise ValueError("cache_mechanisms is required for transform operations")
+
         if original_element.etype == "image":
             if isinstance(transformed_data, np.ndarray) or isinstance(transformed_data, Image.Image):
                 new_category = "image"
@@ -179,7 +192,10 @@ class TorchvisionV2Transform(SampleTransform):
         else:
             raise NotImplementedError(f"Unsupported element type: {original_element.etype}")
 
-        provider = cache_mechanisms[original_element.etype].store(
+        cache_mechanism = cache_mechanisms[original_element.etype]
+        if cache_mechanism is None:
+            raise ValueError(f"cache_mechanism for etype '{original_element.etype}' is None")
+        provider = cache_mechanism.store(
             original_element, transformed_data, as_category=new_category, should_update_elements=False
         )
 

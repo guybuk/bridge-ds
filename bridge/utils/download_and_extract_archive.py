@@ -215,7 +215,8 @@ def download_file_from_google_drive(
 def _extract_tar(
     from_path: Union[str, pathlib.Path], to_path: Union[str, pathlib.Path], compression: Optional[str]
 ) -> None:
-    with tarfile.open(from_path, f"r:{compression[1:]}" if compression else "r") as tar:
+    mode = f"r:{compression[1:]}" if compression is not None else "r"
+    with tarfile.open(from_path, mode) as tar:  # type: ignore[call-overload]
         # tar.extractall(to_path)
         tar_members = tar.getmembers()
 

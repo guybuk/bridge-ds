@@ -47,12 +47,13 @@ class PairedPanel(DisplayEngine["MultiRoleDataset", "MultiRoleSample"]):
         """Render an image element using holoviews."""
         import holoviews as hv
 
+        data: np.ndarray
         if element.category == "image":
-            data: np.ndarray = element.data
+            data = element.data
         elif element.category == "torch":
-            data: np.ndarray = element.data.permute(1, 2, 0).numpy()
+            data = element.data.permute(1, 2, 0).numpy()
         else:
-            data: np.ndarray = np.array(element.data)
+            data = np.array(element.data)
 
         h, w = data.shape[0], data.shape[1]
         if len(data.shape) == 2:

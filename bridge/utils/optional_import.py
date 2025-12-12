@@ -9,7 +9,7 @@ def optional_dependencies(error: str = "ignore", extras: List[str] | None = None
     try:
         yield None
     except ImportError as e:
-        dep_name = e.name
+        dep_name = e.name or "unknown"
         msg = _generate_msg(dep_name, extras)
         if error == "raise":
             raise ImportError(msg) from e

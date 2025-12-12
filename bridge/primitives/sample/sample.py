@@ -51,12 +51,14 @@ class Sample(Displayable):
         return dict(data_dict)
 
     def show(self, **kwargs: Any):
+        if self._display_engine is None:
+            raise RuntimeError("No display engine configured")
         return self._display_engine.show_sample(self, **kwargs)
 
     def transform(
         self,
         transform: SampleTransform,
-        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> "Sample":
         cache_mechanisms = self._get_cache_mechanisms_for_transform(self, cache_mechanisms)
@@ -123,7 +125,9 @@ class Sample(Displayable):
         return d
 
     @staticmethod
-    def _get_cache_mechanisms_for_transform(sample: Sample, cache_mechanisms: Dict[str, CacheMechanism] | None):
+    def _get_cache_mechanisms_for_transform(
+        sample: Sample, cache_mechanisms: Dict[str, CacheMechanism | None] | None
+    ) -> Dict[str, CacheMechanism | None]:
         if cache_mechanisms is None:
             cache_mechanisms = {}
 
@@ -131,7 +135,9 @@ class Sample(Displayable):
         if set(sample_etypes) == set(cache_mechanisms.keys()):
             return cache_mechanisms
 
-        default_cache_mechanisms = {etype: CacheMechanism() for etype in sample_etypes}
+        default_cache_mechanisms: Dict[str, CacheMechanism | None] = {
+            etype: CacheMechanism() for etype in sample_etypes
+        }
 
         missing_keys = set(default_cache_mechanisms.keys()) - set(cache_mechanisms.keys())
         if len(missing_keys) > 0:

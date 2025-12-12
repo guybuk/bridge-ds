@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict
+from typing import Any, Dict
 
 from typing_extensions import Self
 
@@ -9,20 +9,17 @@ from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.utils import Dictable
 from bridge.utils.constants import ELEMENT_COLS
 
-if TYPE_CHECKING:
-    from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
-
 
 class LoadMechanism(Dictable):
     keys = ELEMENT_COLS.LOAD_MECHANISM.list()
 
-    def __init__(self, url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: str) -> None:
+    def __init__(self, url_or_data: URIComponents | Any, category: str) -> None:
         assert category_registry.is_registered(category), f"Category {category} is not registered."
         self._url_or_data = url_or_data
         self._category = category
 
     @property
-    def url_or_data(self) -> URIComponents | ELEMENT_DATA_TYPE:
+    def url_or_data(self) -> URIComponents | Any:
         return self._url_or_data
 
     @property

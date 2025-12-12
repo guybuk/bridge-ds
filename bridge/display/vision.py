@@ -29,8 +29,8 @@ class Panel(DisplayEngine):
             plot = self._plot_single_bbox(element)
         else:
             raise NotImplementedError(f"Invalid etype: {etype}")
-        if element_plot_kwargs:
-            plot = plot.opts(**element_plot_kwargs)
+        if element_plot_kwargs and plot is not None:
+            plot = plot.opts(**element_plot_kwargs)  # type: ignore[union-attr]
         return plot
 
     def show_sample(
@@ -52,7 +52,7 @@ class Panel(DisplayEngine):
         else:
             class_labels = hv.Overlay()
         for i in range(len(imgs)):
-            imgs[i] = imgs[i] * bboxes * class_labels
+            imgs[i] = imgs[i] * bboxes * class_labels  # type: ignore[operator]
         return hv.Layout(imgs)
 
     def show_dataset(
@@ -79,10 +79,13 @@ class Panel(DisplayEngine):
     def _plot_single_image(self, element: Element):
         import holoviews as hv
 
+        data: np.ndarray
         if element.category == "image":
-            data: np.ndarray = element.data
+            data = element.data
         elif element.category == "torch":
-            data: np.ndarray = element.data.permute(1, 2, 0).numpy()
+            data = element.data.permute(1, 2, 0).numpy()
+        else:
+            data = np.array(element.data)
 
         etype = element.etype
         h, w = data.shape[0], data.shape[1]
@@ -127,7 +130,7 @@ class Panel(DisplayEngine):
             for i, group in hv_df.groupby("class"):
                 p = hv.Rectangles(group, label=i)
                 plots.append(p)
-            plots = hv.Overlay(plots).opts(hv.opts.Rectangles(**self._default_kwargs("bbox")))
+            plots = hv.Overlay(plots).opts(hv.opts.Rectangles(**self._default_kwargs("bbox")))  # type: ignore[attr-defined]
             return plots
 
     def _extract_bbox_coords(self, data):
@@ -155,6 +158,8 @@ class Panel(DisplayEngine):
             return dict(aspect="equal", invert_yaxis=True, legend_position="left", xaxis=None, yaxis=None)
         elif etype == "bbox":
             return dict(fill_alpha=0.0, line_width=3, line_color=hv.Cycle("Category20"))
+        else:
+            return {}
 
     @staticmethod
     def _validate_dependencies():

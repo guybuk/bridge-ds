@@ -1,0 +1,11 @@
+{
+  "include": ["bridge", "tests"],
+  "exclude": [".venv", "**/__pycache__", "**/node_modules", ".git", "tests/core/test_missing_module.py"],
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.11",
+  "typeCheckingMode": "standard",
+  "reportImportCycles": false,
+  "reportMissingTypeStubs": false,
+  "reportMissingImports": "warning"
+}

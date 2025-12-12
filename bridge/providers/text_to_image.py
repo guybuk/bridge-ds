@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, Tuple
+from typing import TYPE_CHECKING, Dict
 
 from bridge.display.paired import PairedPanel
-from bridge.primitives.dataset import MultiRoleDataset
+from bridge.primitives.dataset import TextImageDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.sample import MultiRoleSample
+from bridge.primitives.sample import TextImageSample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils import download_and_extract_archive
 
@@ -17,21 +17,21 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
-class CocoCaptions(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
+class CocoCaptions(DatasetProvider[TextImageDataset, TextImageSample]):
     """
     Provider for COCO Captions dataset (text-to-image pairs).
+
+    Returns a TextImageDataset with roles "text" and "image".
 
     Uses the COCO 2017 images with caption annotations.
     Each image may have multiple captions; this provider creates
     one sample per image-caption pair.
 
     Example usage:
-        provider = CocoCaptions(
-            "~/.cache/coco",
-            split="val",
-            captions_per_image=1,
-            role_names=("caption", "image")
-        )
+        provider = CocoCaptions("~/.cache/coco", split="val", captions_per_image=1)
+        ds = provider.build_dataset()
+        ds.text   # DataFrame of caption elements
+        ds.image  # DataFrame of image elements
     """
 
     images_download_links = {
@@ -47,7 +47,6 @@ class CocoCaptions(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
         split: str = "train",
         img_source: str = "stream",
         captions_per_image: int = 1,
-        role_names: Tuple[str, str] = ("caption", "image"),
     ):
         """
         Args:
@@ -55,7 +54,6 @@ class CocoCaptions(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
             split: "train" or "val"
             img_source: "stream" (URL), "download", or "local"
             captions_per_image: Number of captions to pair with each image (1-5)
-            role_names: Role names for (text, image)
         """
         from pycocotools.coco import COCO
 
@@ -68,7 +66,6 @@ class CocoCaptions(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
         self._images_dir = root / f"{split}2017"
         self._img_source = img_source
         self._captions_per_image = captions_per_image
-        self._role_names = role_names
         self._ann_file = root / "annotations" / f"captions_{split}2017.json"
 
         # Download annotations if needed
@@ -85,13 +82,13 @@ class CocoCaptions(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine = None,
+        display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
-    ) -> MultiRoleDataset:
+    ) -> TextImageDataset:
         if display_engine is None:
             display_engine = PairedPanel()
 
-        caption_elements = []
+        text_elements = []
         image_elements = []
 
         sample_idx = 0
@@ -103,16 +100,16 @@ class CocoCaptions(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
 
             # Determine image URL/path
             if self._img_source == "stream":
-                img_url = coco_img["coco_url"]
+                img_url = coco_img["coco_url"]  # type: ignore[typeddict-item]
             else:
-                img_url = str(self._images_dir / coco_img["file_name"])
+                img_url = str(self._images_dir / coco_img["file_name"])  # type: ignore[typeddict-item]
 
             # Create pairs for each caption (up to captions_per_image)
             for caption_data in annotations[: self._captions_per_image]:
-                caption_text = caption_data["caption"]
+                caption_text = caption_data["caption"]  # type: ignore[typeddict-item]
 
-                caption_elem = Element(
-                    element_id=f"caption_{sample_idx}",
+                text_elem = Element(
+                    element_id=f"text_{sample_idx}",
                     sample_id=sample_idx,
                     etype="text",
                     load_mechanism=LoadMechanism(caption_text, category="obj"),
@@ -132,12 +129,12 @@ class CocoCaptions(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
                     },
                 )
 
-                caption_elements.append(caption_elem)
+                text_elements.append(text_elem)
                 image_elements.append(image_elem)
                 sample_idx += 1
 
-        return MultiRoleDataset.from_dict(
-            {self._role_names[0]: caption_elements, self._role_names[1]: image_elements},
+        return TextImageDataset.from_dict(
+            {"text": text_elements, "image": image_elements},
             display_engine=display_engine,
             cache_mechanisms=cache_mechanisms,
         )

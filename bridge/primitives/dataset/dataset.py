@@ -24,7 +24,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
     def __init__(
         self,
         elements: pd.DataFrame,
-        display_engine: DisplayEngine = None,
+        display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
         self._elements = elements
@@ -45,7 +45,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         elements = self.elements.loc[selected]
         return Dataset(elements, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms)
 
-    def assign(self, **kwargs: Dict[str, Callable[[pd.DataFrame], Sequence]]) -> Self:
+    def assign(self, **kwargs: Dict[str, Callable[[pd.DataFrame], Sequence]]) -> "Dataset":
         new_elements = self._elements.assign(**kwargs)
         return Dataset(new_elements, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms)
 
@@ -85,9 +85,9 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         self,
         transform: SampleTransform,
         map_fn=map,
-        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
         display_engine: DisplayEngine | None = None,
-    ) -> Self:
+    ) -> "Dataset":
         fn = functools.partial(
             Sample.transform, transform=transform, cache_mechanisms=cache_mechanisms, display_engine=display_engine
         )
@@ -104,6 +104,8 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         return outputs
 
     def show(self, **kwargs):
+        if self._display_engine is None:
+            raise RuntimeError("No display engine configured")
         return self._display_engine.show_dataset(self, **kwargs)
 
     def __getitem__(self, item):
@@ -127,7 +129,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
     def from_elements(
         cls,
         elements: Iterable[Element],
-        display_engine: DisplayEngine = None,
+        display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
         element_records = [e.to_pd_series() for e in elements]

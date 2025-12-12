@@ -116,4 +116,6 @@ class Element(Displayable):
         )
 
     def show(self, **kwargs):
+        if self._display_engine is None:
+            raise RuntimeError("No display engine configured")
         return self._display_engine.show_element(self, **kwargs)

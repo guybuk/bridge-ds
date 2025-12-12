@@ -12,8 +12,8 @@ class ClassLabel:
         if self.class_name is None:
             self.class_name = str(self.class_idx)
 
-    def __str__(self):
-        return self.class_name
+    def __str__(self) -> str:
+        return self.class_name if self.class_name is not None else str(self.class_idx)
 
     def __hash__(self):
         return hash(f"{self.class_idx},{self.class_name}")

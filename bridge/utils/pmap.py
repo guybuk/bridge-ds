@@ -39,7 +39,7 @@ def pmap(
     function: Callable,
     iterable: Sequence,
     progress_bar: bool = True,
-    n_jobs: int = os.cpu_count(),
+    n_jobs: int | None = None,
     backend: str = "concurrent",
 ) -> Sequence:
     """
@@ -56,15 +56,18 @@ def pmap(
     Returns:
         Sequence: Sequence of results.
     """
+    if n_jobs is None:
+        n_jobs = os.cpu_count() or 1
     if n_jobs == 0:
         return [function(params) for params in (tqdm(iterable) if progress_bar else iterable)]
+    if backend == "joblib":
+        return _pmap_joblib(function, iterable, n_jobs, progress_bar)
+    elif backend == "concurrent":
+        return _pmap_concurrent_futures(function, iterable, n_jobs, progress_bar)
+    elif backend == "dataloader":
+        return _pmap_dataloader(function, iterable, n_jobs, progress_bar)
     else:
-        if backend == "joblib":
-            return _pmap_joblib(function, iterable, n_jobs, progress_bar)
-        elif backend == "concurrent":
-            return _pmap_concurrent_futures(function, iterable, n_jobs, progress_bar)
-        elif backend == "dataloader":
-            return _pmap_dataloader(function, iterable, n_jobs, progress_bar)
+        raise ValueError(f"Unknown backend: {backend}")
 
 
 def _pmap_dataloader(function: Callable, iterable: Sequence, n_jobs: int, progress_bar: bool):
@@ -130,9 +133,9 @@ def _pmap_concurrent_futures(function: Callable, iterable: Sequence, n_jobs, pro
         helper_instance = functools.partial(_helper, function)
     with concurrent.futures.ProcessPoolExecutor(max_workers=n_jobs) as p:
         if progress_bar:
-            return p.map(helper_instance, tqdm(iterable, total=len(iterable)))
+            return list(p.map(helper_instance, tqdm(iterable, total=len(iterable))))
         else:
-            return p.map(helper_instance, iterable)
+            return list(p.map(helper_instance, iterable))
 
 
 def _helper(function, iterable, *args, **kwargs):

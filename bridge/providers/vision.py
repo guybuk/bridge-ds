@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Dict
 import numpy as np
 
 from bridge.display.vision import Panel
-from bridge.primitives.dataset import MultiRoleDataset
+from bridge.primitives.dataset import DetectionDataset, ImageLabelDataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.sample import MultiRoleSample
+from bridge.primitives.sample import DetectionSample, ImageLabelSample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils import download_and_extract_archive, optional_dependencies
 from bridge.utils.data_objects import BoundingBox, ClassLabel
@@ -20,13 +20,17 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
-class ImageFolder(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
+class ImageFolder(DatasetProvider[ImageLabelDataset, ImageLabelSample]):
     def __init__(self, root: str | os.PathLike):
         self._root = root
 
     def build_dataset(
-        self, display_engine: DisplayEngine = Panel(), cache_mechanisms: Dict[str, CacheMechanism] = None
-    ):
+        self,
+        display_engine: DisplayEngine | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
+    ) -> ImageLabelDataset:
+        if display_engine is None:
+            display_engine = Panel()
         images = []
         labels = []
         for i, class_dir in enumerate(sorted(Path(self._root).iterdir())):
@@ -48,14 +52,14 @@ class ImageFolder(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
                 )
                 images.append(img_element)
                 labels.append(label_element)
-        return MultiRoleDataset.from_dict(
+        return ImageLabelDataset.from_dict(
             {"image": images, "label": labels},
             display_engine=display_engine,
             cache_mechanisms=cache_mechanisms,
         )
 
 
-class Coco2017Detection(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
+class Coco2017Detection(DatasetProvider[DetectionDataset, DetectionSample]):
     images_download_links = {
         "train": "http://images.cocodataset.org/zips/train2017.zip",
         "val": "http://images.cocodataset.org/zips/val2017.zip",
@@ -94,9 +98,11 @@ class Coco2017Detection(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine = Panel(bbox_format="xywh"),
-        cache_mechanisms: Dict[str, CacheMechanism] = None,
-    ):
+        display_engine: DisplayEngine | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
+    ) -> DetectionDataset:
+        if display_engine is None:
+            display_engine = Panel(bbox_format="xywh")
         img_id_list = list(sorted(self._coco.imgs.keys()))
         images = []
         bboxes = []
@@ -105,7 +111,7 @@ class Coco2017Detection(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
             img_file = self._images_dir / coco_img["file_name"]
 
             if self._img_source == "stream":
-                url = coco_img["coco_url"]
+                url = coco_img["coco_url"]  # type: ignore[typeddict-item]
             else:
                 url = str(img_file)
             load_mechanism = LoadMechanism.from_url_string(url, category="image")
@@ -134,25 +140,27 @@ class Coco2017Detection(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
                     },
                 )
                 bboxes.append(bbox_element)
-        return MultiRoleDataset.from_dict(
+        return DetectionDataset.from_dict(
             {"image": images, "bbox": bboxes},
             display_engine=display_engine,
             cache_mechanisms=cache_mechanisms,
         )
 
 
-class TorchvisionCIFAR10(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
+class TorchvisionCIFAR10(DatasetProvider[ImageLabelDataset, ImageLabelSample]):
     def __init__(self, root: str | os.PathLike, train: bool = True, download: bool = False):
         with optional_dependencies("raise"):
             from torchvision.datasets import CIFAR10
 
-        self._ds = CIFAR10(root=root, train=train, download=download)
+        self._ds = CIFAR10(root=str(root), train=train, download=download)
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine = Panel(),
+        display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
-    ):
+    ) -> ImageLabelDataset:
+        if display_engine is None:
+            display_engine = Panel()
         images = []
         labels = []
         for i, (img, target) in enumerate(zip(self._ds.data, self._ds.targets)):
@@ -174,7 +182,7 @@ class TorchvisionCIFAR10(DatasetProvider[MultiRoleDataset, MultiRoleSample]):
             images.append(img_element)
             labels.append(label_element)
 
-        return MultiRoleDataset.from_dict(
+        return ImageLabelDataset.from_dict(
             {"image": images, "label": labels},
             display_engine=display_engine,
             cache_mechanisms=cache_mechanisms,

@@ -35,7 +35,7 @@ class MultiRoleSample(Sample):
         self,
         elements: List[Element] | Dict[str, List[Element]],
         role_names: Tuple[str, ...],
-        display_engine: DisplayEngine = None,
+        display_engine: DisplayEngine | None = None,
     ):
         super().__init__(elements, display_engine)
         self._role_names = role_names
@@ -92,7 +92,7 @@ class MultiRoleSample(Sample):
     def transform(
         self,
         transform: SampleTransform,
-        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
         display_engine: DisplayEngine | None = None,
     ) -> Self:
         transformed_sample = super().transform(transform, cache_mechanisms, display_engine)

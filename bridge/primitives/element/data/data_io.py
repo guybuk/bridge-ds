@@ -1,29 +1,21 @@
 import abc
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 import numpy as np
 
 from bridge.primitives.element.data.category_registry import register
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
-from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
 
 
 class DataIO(abc.ABC):
-    @property
-    @abc.abstractmethod
-    def category(self):
-        pass
-
-    @property
-    @abc.abstractmethod
-    def extension(self):
-        pass
+    category: ClassVar[str]
+    extension: ClassVar[str]
 
     @classmethod
     @abc.abstractmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | Any) -> Any:
         pass
 
     @classmethod
@@ -38,7 +30,7 @@ class JPEGDataIO(DataIO):
     extension = ".jpg"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | Any) -> Any:
         if not isinstance(url_or_data, URIComponents):
             return np.array(url_or_data)  # assumes object is a PIL image or np.ndarray
 
@@ -70,7 +62,7 @@ class TorchDataIO(DataIO):
     extension = ".pt"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | Any) -> Any:
         if not isinstance(url_or_data, URIComponents):
             return url_or_data  # assume that is already torch tensor
         import torch
@@ -99,7 +91,7 @@ class NumpyDataIO(DataIO):
     extension = ".npy"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | Any) -> Any:
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
         return np.load(str(url_or_data))
@@ -115,7 +107,7 @@ class TextDataIO(DataIO):
     extension = ".txt"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | Any) -> Any:
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
         return open(str(url_or_data), "r").read()
@@ -131,7 +123,7 @@ class ObjDataIO(DataIO):
     extension = ".pkl"
 
     @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
+    def load(cls, url_or_data: URIComponents | Any) -> Any:
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
         raise NotImplementedError()

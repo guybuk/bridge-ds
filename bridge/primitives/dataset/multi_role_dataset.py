@@ -44,7 +44,7 @@ class MultiRoleDataset(Dataset):
     def __init__(
         self,
         element_groups: Dict[str, pd.DataFrame],
-        display_engine: DisplayEngine = None,
+        display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
         role_names = tuple(element_groups.keys())
@@ -115,7 +115,7 @@ class MultiRoleDataset(Dataset):
         self,
         role: str,
         selector: Callable[..., Sequence],
-    ) -> Self:
+    ) -> "MultiRoleDataset":
         """
         Select samples based on a condition applied to a specific role.
 
@@ -141,7 +141,7 @@ class MultiRoleDataset(Dataset):
         self,
         role: str,
         **kwargs: Callable[..., Sequence],
-    ) -> Self:
+    ) -> "MultiRoleDataset":
         """
         Assign new columns to a specific role's elements.
 
@@ -160,7 +160,7 @@ class MultiRoleDataset(Dataset):
             cache_mechanisms=self._cache_mechanisms,
         )
 
-    def sort_by_role(self, role: str, by: str, ascending: bool = True) -> Self:
+    def sort_by_role(self, role: str, by: str, ascending: bool = True) -> "MultiRoleDataset":
         """Sort dataset by a column in a specific role's elements."""
         role_dfs = {r: self.get_role(r) for r in self._role_names}
         role_dfs[role] = role_dfs[role].sort_values(by=by, ascending=ascending)
@@ -175,9 +175,9 @@ class MultiRoleDataset(Dataset):
         self,
         transform: SampleTransform,
         map_fn=map,
-        cache_mechanisms: Dict[str, CacheMechanism] | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
         display_engine: DisplayEngine | None = None,
-    ) -> Self:
+    ) -> "MultiRoleDataset":
         ds = super().transform_samples(
             transform, map_fn=map_fn, cache_mechanisms=cache_mechanisms, display_engine=display_engine
         )
@@ -207,7 +207,7 @@ class MultiRoleDataset(Dataset):
     def from_dict(
         cls,
         element_lists: Dict[str, List[Element]],
-        display_engine: DisplayEngine = None,
+        display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
         """

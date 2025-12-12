@@ -1,7 +1,9 @@
 import abc
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, List
+from typing import Any, ClassVar, Dict, List
+
+from typing_extensions import Self
 
 
 class StrEnum(str, Enum):
@@ -10,10 +12,7 @@ class StrEnum(str, Enum):
 
 
 class Dictable(ABC):
-    @property
-    @abstractmethod
-    def keys(self) -> List[str]:
-        pass
+    keys: ClassVar[List[str]]
 
     @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
@@ -21,7 +20,7 @@ class Dictable(ABC):
 
     @classmethod
     @abstractmethod
-    def from_dict(cls, dic: Dict[str, Any], **kwargs):
+    def from_dict(cls, dic: Dict[str, Any], **kwargs) -> Self:
         pass
 
 
