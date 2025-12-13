@@ -273,3 +273,106 @@ class TestTypedDatasetsFallbackToMultiRole:
         assert ds.role_names == ("english", "french")
         assert len(ds.english) == 10
         assert len(ds.french) == 10
+
+
+class TestSampleIdValidation:
+    """Test sample ID validation for typed datasets."""
+
+    def test_symmetric_validation_mismatched_sample_ids_raises(self):
+        """ImageLabelDataset requires 1:1 sample ID correspondence."""
+        images = [
+            Element(
+                element_id="image_0",
+                sample_id=0,
+                etype="image",
+                load_mechanism=LoadMechanism(np.zeros((32, 32, 3), dtype=np.uint8), category="obj"),
+            )
+        ]
+        labels = [
+            Element(
+                element_id="label_1",
+                sample_id=1,  # Different sample_id
+                etype="label",
+                load_mechanism=LoadMechanism({"class": 0}, category="obj"),
+            )
+        ]
+        with pytest.raises(ValueError, match="requires 1:1 sample ID correspondence"):
+            ImageLabelDataset.from_dict({"image": images, "label": labels})
+
+    def test_symmetric_validation_extra_in_one_role_raises(self):
+        """ImageLabelDataset requires identical sample IDs in both roles."""
+        images = [
+            Element(
+                element_id="image_0",
+                sample_id=0,
+                etype="image",
+                load_mechanism=LoadMechanism(np.zeros((32, 32, 3), dtype=np.uint8), category="obj"),
+            ),
+            Element(
+                element_id="image_1",
+                sample_id=1,
+                etype="image",
+                load_mechanism=LoadMechanism(np.zeros((32, 32, 3), dtype=np.uint8), category="obj"),
+            ),
+        ]
+        labels = [
+            Element(
+                element_id="label_0",
+                sample_id=0,
+                etype="label",
+                load_mechanism=LoadMechanism({"class": 0}, category="obj"),
+            )
+        ]
+        with pytest.raises(ValueError, match="requires 1:1 sample ID correspondence"):
+            ImageLabelDataset.from_dict({"image": images, "label": labels})
+
+    def test_asymmetric_validation_bbox_not_in_image_raises(self):
+        """DetectionDataset requires bbox sample IDs to be subset of image sample IDs."""
+        images = [
+            Element(
+                element_id="image_0",
+                sample_id=0,
+                etype="image",
+                load_mechanism=LoadMechanism(np.zeros((32, 32, 3), dtype=np.uint8), category="obj"),
+            )
+        ]
+        bboxes = [
+            Element(
+                element_id="bbox_1",
+                sample_id=1,  # sample_id not in images
+                etype="bbox",
+                load_mechanism=LoadMechanism({"coords": [0, 0, 10, 10]}, category="obj"),
+            )
+        ]
+        with pytest.raises(ValueError, match="has sample IDs not present in"):
+            DetectionDataset.from_dict({"image": images, "bbox": bboxes})
+
+    def test_asymmetric_validation_images_without_bboxes_allowed(self):
+        """DetectionDataset allows images without bboxes."""
+        images = [
+            Element(
+                element_id="image_0",
+                sample_id=0,
+                etype="image",
+                load_mechanism=LoadMechanism(np.zeros((32, 32, 3), dtype=np.uint8), category="obj"),
+            ),
+            Element(
+                element_id="image_1",
+                sample_id=1,
+                etype="image",
+                load_mechanism=LoadMechanism(np.zeros((32, 32, 3), dtype=np.uint8), category="obj"),
+            ),
+        ]
+        bboxes = [
+            Element(
+                element_id="bbox_0",
+                sample_id=0,  # Only sample 0 has bboxes
+                etype="bbox",
+                load_mechanism=LoadMechanism({"coords": [0, 0, 10, 10]}, category="obj"),
+            )
+        ]
+        # Should NOT raise - images without bboxes are allowed
+        ds = DetectionDataset.from_dict({"image": images, "bbox": bboxes})
+        assert len(ds) == 2
+        assert len(ds.image) == 2
+        assert len(ds.bbox) == 1

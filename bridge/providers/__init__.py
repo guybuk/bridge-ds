@@ -1,12 +1,37 @@
 from bridge.providers.dataset_provider import DatasetProvider
-from bridge.providers.image_to_image import AlignedImageFolders, Pix2PixFolder
-from bridge.providers.text_to_image import CocoCaptions
-from bridge.providers.translation import ParallelCorpus
+
+# Multimodal providers
+from bridge.providers.multimodal import (
+    CocoCaptions,
+)
+
+# Text providers
+from bridge.providers.text import (
+    LargeMovieReviewDataset,
+    ParallelCorpus,
+)
+
+# Vision providers
+from bridge.providers.vision import (
+    AlignedImageFolders,
+    Coco2017Detection,
+    ImageFolder,
+    Pix2PixFolder,
+    TorchvisionCIFAR10,
+)
 
 __all__ = [
-    "AlignedImageFolders",
-    "CocoCaptions",
+    # Base
     "DatasetProvider",
-    "ParallelCorpus",
+    # Vision
+    "ImageFolder",
+    "TorchvisionCIFAR10",
+    "Coco2017Detection",
     "Pix2PixFolder",
+    "AlignedImageFolders",
+    # Text
+    "LargeMovieReviewDataset",
+    "ParallelCorpus",
+    # Multimodal
+    "CocoCaptions",
 ]

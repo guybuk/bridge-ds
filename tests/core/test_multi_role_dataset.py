@@ -155,26 +155,6 @@ class TestMultiRoleDatasetValidation:
         with pytest.raises(AssertionError, match="Must have at least 2 roles"):
             MultiRoleDataset.from_dict({"source": source_list})
 
-    def test_mismatched_sample_ids_raises(self):
-        first = [
-            Element(
-                element_id="a",
-                sample_id=0,
-                etype="text",
-                load_mechanism=LoadMechanism("text", category="obj"),
-            )
-        ]
-        second = [
-            Element(
-                element_id="b",
-                sample_id=1,  # Different sample_id
-                etype="text",
-                load_mechanism=LoadMechanism("text", category="obj"),
-            )
-        ]
-        with pytest.raises(AssertionError, match="Sample IDs must match"):
-            MultiRoleDataset.from_dict({"first": first, "second": second})
-
     def test_duplicate_element_ids_raises(self):
         first = [
             Element(

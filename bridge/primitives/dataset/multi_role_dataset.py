@@ -58,16 +58,6 @@ class MultiRoleDataset(Dataset):
             all_element_ids.extend(ids)
         assert len(all_element_ids) == len(set(all_element_ids)), "Element IDs must be unique across all roles"
 
-        # Validate all roles cover the same sample IDs
-        sample_id_sets = [set(df.index.get_level_values(ELEMENT_COLS.SAMPLE_ID)) for df in element_groups.values()]
-        first_set = sample_id_sets[0]
-        for i, s in enumerate(sample_id_sets[1:], 1):
-            assert s == first_set, (
-                f"Sample IDs must match across all roles. "
-                f"Role '{role_names[0]}' has {len(first_set)} samples, "
-                f"role '{role_names[i]}' has {len(s)} samples."
-            )
-
         self._role_names = role_names
 
         # Mark each DataFrame with its role and concatenate
