@@ -44,3 +44,9 @@ dev = [
 [tool.uv.build-backend]
 module-name = "bridge"
 module-root = "."
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: opt-in slow tests (notebook integration); run with `pytest -m slow` or `pytest -m 'slow or not slow'`",
+]
+addopts = "-m 'not slow'"
