@@ -49,18 +49,18 @@ class SingularDataset(Dataset):
 
     @property
     def samples(self) -> pd.DataFrame:
-        full = self.elements
+        sub = self._df.loc[self._df[IS_SAMPLE_COL_NAME]]
         return (
-            full.loc[full[IS_SAMPLE_COL_NAME]]
+            self._join_locations(sub)
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
 
     @property
     def annotations(self) -> pd.DataFrame:
-        full = self.elements
+        sub = self._df.loc[~self._df[IS_SAMPLE_COL_NAME]]
         return (
-            full.loc[~full[IS_SAMPLE_COL_NAME]]
+            self._join_locations(sub)
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )

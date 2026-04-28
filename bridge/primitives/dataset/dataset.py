@@ -54,29 +54,41 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         columns (back-compat path for callers that hand-build a DataFrame).
         Returns the new store and a DataFrame without those columns.
         """
-        from bridge.primitives.element.data.load_mechanism import LoadMechanism
-
         store = ElementStore()
         url_col = ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA
         enc_col = ELEMENT_COLS.LOAD_MECHANISM.ENCODING
         if url_col not in df.columns or enc_col not in df.columns:
             return store, df
-        for (sample_id, element_id), row in df.iterrows():
-            store.set(
-                element_id,
-                LoadMechanism(row[url_col], encoding=row[enc_col]),
-            )
+
+        # Lazy import to avoid the circular dep noted on the dataset module.
+        from bridge.primitives.element.data.load_mechanism import LoadMechanism
+
+        eids = df.index.get_level_values(ELEMENT_COLS.ID).values
+        url_vals = df[url_col].values
+        enc_vals = df[enc_col].values
+        for eid, uod, enc in zip(eids, url_vals, enc_vals):
+            store.set(eid, LoadMechanism(uod, encoding=enc))
         return store, df.drop(columns=[url_col, enc_col])
 
-    @property
-    def elements(self) -> pd.DataFrame:
-        df = self._df.copy()
+    def _join_locations(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Add url_or_data / encoding columns to a copy of df by joining
+        with the lineage's ElementStore. Used by `elements` (full table)
+        and by SingularDataset's samples/annotations (filtered subsets).
+        """
+        df = df.copy()
         url_col = ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA
         enc_col = ELEMENT_COLS.LOAD_MECHANISM.ENCODING
         eids = df.index.get_level_values(ELEMENT_COLS.ID)
-        df[url_col] = [self._store.get(eid).url_or_data for eid in eids]
-        df[enc_col] = [self._store.get(eid).encoding for eid in eids]
+        # Single pass: fetch each LoadMechanism once, project both fields.
+        table = self._store._table
+        lms = [table[eid] for eid in eids]
+        df[url_col] = [lm.url_or_data for lm in lms]
+        df[enc_col] = [lm.encoding for lm in lms]
         return df
+
+    @property
+    def elements(self) -> pd.DataFrame:
+        return self._join_locations(self._df)
 
     @property
     def sample_ids(self) -> List[Hashable]:
