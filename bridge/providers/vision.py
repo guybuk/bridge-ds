@@ -36,14 +36,14 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
                     element_id=f"image_{sample_id}",
                     sample_id=sample_id,
                     etype="image",
-                    load_mechanism=LoadMechanism.from_url_string(str(img_file), encoding="image"),
+                    load_mechanism=LoadMechanism.from_url_string(str(img_file), encoding="jpeg"),
                     metadata={"filename": img_file.name},
                 )
                 class_element = Element(
                     element_id=f"class_{i}",
                     sample_id=sample_id,
                     etype="class_label",
-                    load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), encoding="obj"),
+                    load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), encoding="pickle"),
                     metadata={"filename": img_file.name},
                 )
                 images.append(img_element)
@@ -106,7 +106,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
                 url = coco_img["coco_url"]  # noqa
             else:
                 url = str(img_file)
-            load_mechanism = LoadMechanism.from_url_string(url, encoding="image")  # noqa
+            load_mechanism = LoadMechanism.from_url_string(url, encoding="jpeg")  # noqa
             img_element = Element(
                 element_id=f"{img_id}_img",
                 sample_id=img_id,
@@ -119,7 +119,7 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
             for coco_ann_dict in coco_annotations:
                 category_id = coco_ann_dict["category_id"]
                 bbox_data = BoundingBox(coords=(np.array(coco_ann_dict["bbox"])), class_label=(ClassLabel(category_id)))
-                load_mechanism = LoadMechanism(bbox_data, encoding="obj")
+                load_mechanism = LoadMechanism(bbox_data, encoding="pickle")
                 bbox_element = Element(
                     element_id=f"{img_id}_{coco_ann_dict['id']}",
                     sample_id=img_id,
@@ -156,7 +156,7 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
                 element_id=i,
                 etype="image",
                 sample_id=i,
-                load_mechanism=LoadMechanism(url_or_data=img, encoding="image"),
+                load_mechanism=LoadMechanism(url_or_data=img, encoding="jpeg"),
             )
             label_element = Element(
                 element_id=f"label_{i}",
@@ -164,7 +164,7 @@ class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
                 sample_id=i,
                 load_mechanism=LoadMechanism(
                     url_or_data=ClassLabel(class_idx=target, class_name=self._ds.classes[target]),
-                    encoding="obj",
+                    encoding="pickle",
                 ),
             )
             sample_list.append(img_element)

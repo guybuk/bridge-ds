@@ -12,32 +12,32 @@ from bridge.utils.data_objects import BoundingBox, ClassLabel, Keypoint
 @pytest.fixture(
     params=[
         {
-            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "obj",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "pickle",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: BoundingBox(np.array([0, 0, 1, 1]), class_label=ClassLabel(0)),
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "obj",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "pickle",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: ClassLabel(class_idx=0, class_name="some_class"),
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "image",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "jpeg",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: "http://example.com/image.jpg",
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "image",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "jpeg",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: "dummy_path.jpg",
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "obj",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "pickle",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: Keypoint(np.array([0, 0])),
         },
     ],
     ids=[
-        "obj_memory_bbox",
-        "obj_memory_class_label",
-        "image_http",
-        "image_file",
-        "obj_memory_keypoint",
+        "pickle_memory_bbox",
+        "pickle_memory_class_label",
+        "jpeg_http",
+        "jpeg_file",
+        "pickle_memory_keypoint",
     ],
 )
 def load_mechanism_dict(request):

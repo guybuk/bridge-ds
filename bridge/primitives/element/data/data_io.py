@@ -34,7 +34,7 @@ class DataIO(abc.ABC):
 
 @register
 class JPEGDataIO(DataIO):
-    encoding = "image"
+    encoding = "jpeg"
     extension = ".jpg"
 
     @classmethod
@@ -66,7 +66,7 @@ class JPEGDataIO(DataIO):
 
 @register
 class TorchDataIO(DataIO):
-    encoding = "torch"
+    encoding = "pt"
     extension = ".pt"
 
     @classmethod
@@ -95,7 +95,7 @@ class TorchDataIO(DataIO):
 
 @register
 class TextDataIO(DataIO):
-    encoding = "text"
+    encoding = "utf8"
     extension = ".txt"
 
     @classmethod
@@ -120,7 +120,7 @@ class TextDataIO(DataIO):
 
 @register
 class ObjDataIO(DataIO):
-    encoding = "obj"
+    encoding = "pickle"
     extension = ".pkl"
 
     @classmethod

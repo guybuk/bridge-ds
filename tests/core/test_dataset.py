@@ -26,14 +26,14 @@ def dummy_elements():
             etype="image",
             load_mechanism=LoadMechanism(
                 url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
-                encoding="obj",
+                encoding="pickle",
             ),
         )
         lbl_element = Element(
             element_id=f"label_{i}",
             sample_id=i,
             etype="class_label",
-            load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), encoding="obj"),
+            load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), encoding="pickle"),
         )
         elements.extend([img_element, lbl_element])
     return elements
@@ -53,14 +53,14 @@ def dummy_elements_2():
             etype="image",
             load_mechanism=LoadMechanism(
                 url_or_data=np.random.randint(0, 255, size=(100, 100, 3)).astype("uint8"),
-                encoding="obj",
+                encoding="pickle",
             ),
         )
         lbl_element = Element(
             element_id=f"label_{100+i}",
             sample_id=50 + i,  # Adjusting sample_id to create overlap
             etype="class_label",
-            load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), encoding="obj"),
+            load_mechanism=LoadMechanism(url_or_data=ClassLabel(class_idx=np.random.randint(0, 10)), encoding="pickle"),
         )
         elements.extend([img_element, lbl_element])
     return elements
