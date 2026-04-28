@@ -62,13 +62,12 @@ def bad_load_mechanism_dict(request):
 
 
 @pytest.fixture
-def element_dict(load_mechanism_dict):
+def element_dict():
     return {
         ELEMENT_COLS.ID: "123",
         ELEMENT_COLS.ETYPE: "image",
         ELEMENT_COLS.ROLE: "image",
         ELEMENT_COLS.SAMPLE_ID: 0,
-        **load_mechanism_dict,
     }
 
 
@@ -82,9 +81,12 @@ def test_bad_load_mechanism_dict(bad_load_mechanism_dict):
         LoadMechanism.from_dict(bad_load_mechanism_dict)
 
 
-def test_element_from_dict(mocker, element_dict):
+def test_element_from_dict(mocker, element_dict, load_mechanism_dict):
     de_mock = mocker.Mock(spec=DisplayEngine)
     cm_mock = mocker.Mock(spec=CacheMechanism)
-    element = Element.from_dict(element_dict, display_engine=de_mock, cache_mechanism=cm_mock)
+    load_mechanism = LoadMechanism.from_dict(load_mechanism_dict)
+    element = Element.from_dict(
+        element_dict, load_mechanism=load_mechanism, display_engine=de_mock, cache_mechanism=cm_mock
+    )
     dic = element.to_dict()
     assert dic == element_dict

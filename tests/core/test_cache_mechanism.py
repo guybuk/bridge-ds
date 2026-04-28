@@ -4,8 +4,8 @@ import pandas as pd
 import pytest
 
 from bridge.primitives.element.data.cache_mechanism import CacheMechanism
+from bridge.primitives.element.data.element_store import ElementStore
 from bridge.primitives.element.data.uri_components import URIComponents
-from bridge.utils.constants import INDICES
 
 
 @pytest.fixture
@@ -55,16 +55,16 @@ def mock_data():
 def test_init(root_uri):
     cm = CacheMechanism(root_uri)
     assert cm._root_uri == root_uri
-    assert cm._elements is None
+    assert cm._store is None
 
 
-def test_set_elements_df(cache_mechanism):
-    df = pd.DataFrame({"id": [1, 2, 3]})
-    cache_mechanism.set_elements_df(df)
-    assert cache_mechanism._elements is df
+def test_bind_store(cache_mechanism):
+    store = ElementStore()
+    cache_mechanism.bind_store(store)
+    assert cache_mechanism._store is store
 
 
-def test_store(
+def test_store_without_bound_store(
     mock_is_registered,
     mock_store,
     mock_extension,
@@ -72,6 +72,7 @@ def test_store(
     mock_element,
     mock_data,
 ):
+    """When no store is bound, store() returns the new provider but doesn't update anything."""
     result = cache_mechanism.store(mock_element, mock_data)
 
     expected_uri = URIComponents(path="/root/path/test_id.ext")
@@ -79,7 +80,7 @@ def test_store(
     assert result == mock_store.return_value
 
 
-def test_store_update_elements(
+def test_store_updates_bound_store(
     mock_is_registered,
     mock_store,
     mock_extension,
@@ -87,29 +88,18 @@ def test_store_update_elements(
     mock_element,
     mock_data,
 ):
-    mock_store.return_value = Mock(to_dict=lambda: {"key1": "value1", "key2": "value2"})
-    mock_extension.return_value = ".ext"
+    """When a store is bound, store() also writes the new provider into it."""
+    new_provider = Mock(name="NewLoadMechanism")
+    mock_store.return_value = new_provider
 
-    elements_df = pd.DataFrame(
-        {
-            "sample_id": ["test_sample_id"],
-            "element_id": ["test_id"],
-            "key1": ["old1"],
-            "key2": ["old2"],
-        }
-    )
-    elements_df.set_index(INDICES, inplace=True)
-    cache_mechanism.set_elements_df(elements_df)
+    element_store = ElementStore()
+    # seed the store with an existing entry so update() has something to overwrite
+    element_store.update("test_id", Mock(name="OldLoadMechanism"))
+    cache_mechanism.bind_store(element_store)
 
-    cache_mechanism.store(mock_element, mock_data, should_update_elements=True)
+    cache_mechanism.store(mock_element, mock_data)
 
-    pd.testing.assert_frame_equal(
-        cache_mechanism._elements,
-        pd.DataFrame(
-            {"key1": ["value1"], "key2": ["value2"]},
-            index=pd.MultiIndex.from_tuples([("test_sample_id", "test_id")], names=INDICES),
-        ),
-    )
+    assert element_store.get("test_id") is new_provider
 
 
 def test_build_uri(mock_is_registered, mock_store, mock_extension, cache_mechanism, mock_element):

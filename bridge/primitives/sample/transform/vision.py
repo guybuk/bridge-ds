@@ -179,8 +179,8 @@ class TorchvisionV2Transform(SampleTransform):
         else:
             raise NotImplementedError(f"Unsupported element type: {original_element.etype}")
 
-        provider = cache_mechanisms[original_element.etype].store(
-            original_element, transformed_data, as_encoding=new_encoding, should_update_elements=False
+        provider = cache_mechanisms[original_element.role].store(
+            original_element, transformed_data, as_encoding=new_encoding,
         )
 
         return Element(

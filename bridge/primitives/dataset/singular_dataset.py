@@ -6,6 +6,7 @@ import pandas as pd
 from typing_extensions import Self
 
 from bridge.primitives.dataset.dataset import Dataset
+from bridge.primitives.element.data.element_store import ElementStore
 from bridge.primitives.sample.singular_sample import SingularSample
 from bridge.utils.constants import ELEMENT_COLS, INDICES, IS_SAMPLE_COL_NAME
 
@@ -28,6 +29,7 @@ class SingularDataset(Dataset):
         self,
         samples: pd.DataFrame,
         annotations: pd.DataFrame,
+        store: ElementStore | None = None,
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
@@ -43,20 +45,22 @@ class SingularDataset(Dataset):
         samples[IS_SAMPLE_COL_NAME] = True
         annotations[IS_SAMPLE_COL_NAME] = False
         elements = pd.concat([samples, annotations])
-        super().__init__(elements, display_engine, cache_mechanisms)
+        super().__init__(elements, store=store, display_engine=display_engine, cache_mechanisms=cache_mechanisms)
 
     @property
     def samples(self) -> pd.DataFrame:
+        full = self.elements
         return (
-            self._elements.loc[self._elements[IS_SAMPLE_COL_NAME]]
+            full.loc[full[IS_SAMPLE_COL_NAME]]
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
 
     @property
     def annotations(self) -> pd.DataFrame:
+        full = self.elements
         return (
-            self._elements.loc[~self._elements[IS_SAMPLE_COL_NAME]]
+            full.loc[~full[IS_SAMPLE_COL_NAME]]
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
@@ -80,6 +84,7 @@ class SingularDataset(Dataset):
         return SingularDataset(
             new_samples,
             new_annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
@@ -91,6 +96,7 @@ class SingularDataset(Dataset):
         return SingularDataset(
             self.samples,
             new_annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
@@ -101,6 +107,7 @@ class SingularDataset(Dataset):
         return SingularDataset(
             new_samples,
             self.annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
@@ -111,6 +118,7 @@ class SingularDataset(Dataset):
         return SingularDataset(
             self.samples,
             new_annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
@@ -118,13 +126,13 @@ class SingularDataset(Dataset):
     def sort_samples(self, by: str, ascending: bool = True):
         new_samples = self.samples.sort_values(by=by, ascending=ascending)
         return SingularDataset(
-            new_samples, self.annotations, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
+            new_samples, self.annotations, store=self._store, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
         )
 
     def sort_annotations(self, by: str, ascending: bool = True):
         new_annotations = self.annotations.sort_values(by=by, ascending=ascending)
         return SingularDataset(
-            self.samples, new_annotations, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
+            self.samples, new_annotations, store=self._store, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
         )
 
     def transform_samples(
@@ -137,13 +145,14 @@ class SingularDataset(Dataset):
         ds = super().transform_samples(
             transform, map_fn=map_fn, cache_mechanisms=cache_mechanisms, display_engine=display_engine
         )
+        full = ds.elements
         samples = (
-            ds.elements.loc[ds.elements[IS_SAMPLE_COL_NAME]]
+            full.loc[full[IS_SAMPLE_COL_NAME]]
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
         annotations = (
-            ds.elements.loc[~ds.elements[IS_SAMPLE_COL_NAME]]
+            full.loc[~full[IS_SAMPLE_COL_NAME]]
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
@@ -157,10 +166,17 @@ class SingularDataset(Dataset):
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
-        sample_records = [s.to_dict() for s in samples_list]
-        annotation_records = [a.to_dict() for a in annotations_list]
+        store = ElementStore()
+        sample_records = []
+        for s in samples_list:
+            sample_records.append(s.to_dict())
+            store.set(s.id, s._load_mechanism)
+        annotation_records = []
+        for a in annotations_list:
+            annotation_records.append(a.to_dict())
+            store.set(a.id, a._load_mechanism)
 
         samples_df = pd.DataFrame(sample_records).set_index(INDICES)
         annotations_df = pd.DataFrame(annotation_records).set_index(INDICES)
 
-        return cls(samples_df, annotations_df, display_engine=display_engine, cache_mechanisms=cache_mechanisms)
+        return cls(samples_df, annotations_df, store=store, display_engine=display_engine, cache_mechanisms=cache_mechanisms)

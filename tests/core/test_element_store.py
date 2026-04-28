@@ -33,7 +33,7 @@ def test_contains():
 
 def test_get_missing_raises_keyerror():
     store = ElementStore()
-    with pytest.raises(KeyError):
+    with pytest.raises(KeyError, match="element_id="):
         store.get("missing")
 
 

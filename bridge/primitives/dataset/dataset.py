@@ -9,6 +9,7 @@ from typing_extensions import Self
 
 from bridge.primitives.dataset.sample_api import SampleAPI
 from bridge.primitives.dataset.table_api import TableAPI
+from bridge.primitives.element.data.element_store import ElementStore
 from bridge.primitives.sample import Sample
 from bridge.utils.constants import ELEMENT_COLS, INDICES
 from bridge.utils.helper import Displayable
@@ -24,34 +25,91 @@ class Dataset(TableAPI, SampleAPI, Displayable):
     def __init__(
         self,
         elements: pd.DataFrame,
+        store: ElementStore | None = None,
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
-        self._elements = elements
+        if store is None:
+            store, elements = self._extract_store_from_df(elements)
+        else:
+            # Always strip location columns from _df, even when store is provided —
+            # they may have leaked back in via derivations that pass `self.elements`
+            # (which synthesizes the columns) into a new Dataset constructor.
+            url_col = ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA
+            enc_col = ELEMENT_COLS.LOAD_MECHANISM.ENCODING
+            cols_to_drop = [c for c in (url_col, enc_col) if c in elements.columns]
+            if cols_to_drop:
+                elements = elements.drop(columns=cols_to_drop)
+        self._df = elements
+        self._store = store
         self._display_engine = display_engine
         self._cache_mechanisms = cache_mechanisms or {}
-        self._connect_caches()
+        for cache in self._cache_mechanisms.values():
+            if cache is not None:
+                cache.bind_store(self._store)
+
+    @staticmethod
+    def _extract_store_from_df(df: pd.DataFrame) -> tuple[ElementStore, pd.DataFrame]:
+        """Build an ElementStore from a DataFrame's url_or_data + encoding
+        columns (back-compat path for callers that hand-build a DataFrame).
+        Returns the new store and a DataFrame without those columns.
+        """
+        from bridge.primitives.element.data.load_mechanism import LoadMechanism
+
+        store = ElementStore()
+        url_col = ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA
+        enc_col = ELEMENT_COLS.LOAD_MECHANISM.ENCODING
+        if url_col not in df.columns or enc_col not in df.columns:
+            return store, df
+        for (sample_id, element_id), row in df.iterrows():
+            store.set(
+                element_id,
+                LoadMechanism(row[url_col], encoding=row[enc_col]),
+            )
+        return store, df.drop(columns=[url_col, enc_col])
 
     @property
     def elements(self) -> pd.DataFrame:
-        return self._elements.copy()
+        df = self._df.copy()
+        url_col = ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA
+        enc_col = ELEMENT_COLS.LOAD_MECHANISM.ENCODING
+        eids = df.index.get_level_values(ELEMENT_COLS.ID)
+        df[url_col] = [self._store.get(eid).url_or_data for eid in eids]
+        df[enc_col] = [self._store.get(eid).encoding for eid in eids]
+        return df
 
     @property
     def sample_ids(self) -> List[Hashable]:
-        return self._elements.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).drop_duplicates().to_list()
+        return self._df.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).drop_duplicates().to_list()
 
     def select(self, selector: Callable):
+        # selector receives the user-facing elements (with location columns) for filtering
         selected = selector(self.elements)
-        elements = self.elements.loc[selected]
-        return Dataset(elements, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms)
+        elements = self._df.loc[selected]
+        return Dataset(
+            elements,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
+        )
 
     def assign(self, **kwargs: Dict[str, Callable[[pd.DataFrame], Sequence]]) -> Self:
-        new_elements = self._elements.assign(**kwargs)
-        return Dataset(new_elements, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms)
+        new_df = self._df.assign(**kwargs)
+        return Dataset(
+            new_df,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
+        )
 
     def sort(self, by: str, ascending: bool = True):
-        new_elements = self._elements.sort_values(by=by, ascending=ascending)
-        return Dataset(new_elements, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms)
+        new_df = self._df.sort_values(by=by, ascending=ascending)
+        return Dataset(
+            new_df,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
+        )
 
     def merge(
         self,
@@ -59,26 +117,43 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> "Dataset":
-        self_element_ids = self.elements.index.get_level_values(ELEMENT_COLS.ID)
-        other_element_ids = other.elements.index.get_level_values(ELEMENT_COLS.ID)
+        """Merge two Datasets. Element ids must be disjoint.
+
+        Combines stores from both sides via ElementStore.extend. When
+        cache_mechanisms is None, merges the two sides' caches with
+        `other`'s entries overriding `self`'s on key conflict.
+        """
+        self_eids = self._df.index.get_level_values(ELEMENT_COLS.ID)
+        other_eids = other._df.index.get_level_values(ELEMENT_COLS.ID)
         assert (
-            len(self_element_ids.intersection(other_element_ids)) == 0
+            len(self_eids.intersection(other_eids)) == 0
         ), "Cannot merge Datasets with duplicate element ids."
-        elements = pd.concat([self.elements, other.elements])
+        elements = pd.concat([self._df, other._df])
+        merged_store = ElementStore()
+        merged_store.extend(self._store)
+        merged_store.extend(other._store)
         if display_engine is None:
             display_engine = self._display_engine
         if cache_mechanisms is None:
-            cache_mechanisms = self._cache_mechanisms
-        return Dataset(elements, display_engine, cache_mechanisms=cache_mechanisms)
+            cache_mechanisms = {**self._cache_mechanisms, **other._cache_mechanisms}
+        return Dataset(
+            elements,
+            store=merged_store,
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
+        )
 
     def iget(self, index: int) -> Sample:
         sample_id = self.sample_ids[index]
         return self.get(sample_id)
 
     def get(self, sample_id: Hashable) -> Sample:
-        sample_df = self._elements.xs(sample_id, level=ELEMENT_COLS.SAMPLE_ID, drop_level=False)
+        sample_df = self._df.xs(sample_id, level=ELEMENT_COLS.SAMPLE_ID, drop_level=False)
         return Sample.from_pd_dataframe(
-            sample_df, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
+            sample_df,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
         )
 
     def transform_samples(
@@ -119,7 +194,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
 
     def __repr__(self) -> str:
         lens_dict = {"n_samples": len(self)}
-        for etype, group in self._elements.groupby(ELEMENT_COLS.ETYPE):
+        for etype, group in self._df.groupby(ELEMENT_COLS.ETYPE):
             lens_dict[f"n_{etype}"] = len(group)
         return "Dataset: " + str(lens_dict)
 
@@ -130,9 +205,18 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
-        element_records = [e.to_pd_series() for e in elements]
-        elements_df = pd.DataFrame(element_records).set_index(INDICES)
-        return cls(elements=elements_df, display_engine=display_engine, cache_mechanisms=cache_mechanisms)
+        store = ElementStore()
+        records = []
+        for elem in elements:
+            store.set(elem.id, elem._load_mechanism)
+            records.append(elem.to_pd_series())
+        elements_df = pd.DataFrame(records).set_index(INDICES)
+        return cls(
+            elements=elements_df,
+            store=store,
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
+        )
 
     @classmethod
     def from_role_dict(
@@ -141,33 +225,23 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         display_engine: DisplayEngine | None = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
-        """Build a Dataset from elements grouped by role.
-
-        The role from each dict key is assigned to that element's row in the
-        underlying DataFrame, overriding any role already set on the
-        Element. Empty value lists are silently skipped. Caller's Element
-        instances are NOT mutated; only the DataFrame records carry the
-        assigned role.
-        """
         from bridge.primitives.element.element import Element
 
+        store = ElementStore()
         records = []
         for role, elements in elements_by_role.items():
             for elem in elements:
                 record = elem.to_dict()
                 record[ELEMENT_COLS.ROLE] = role
                 records.append(pd.Series(record))
+                store.set(elem.id, elem._load_mechanism)
         if not records:
             elements_df = pd.DataFrame(columns=Element.keys).set_index(INDICES)
         else:
             elements_df = pd.DataFrame(records).set_index(INDICES)
         return cls(
             elements=elements_df,
+            store=store,
             display_engine=display_engine,
             cache_mechanisms=cache_mechanisms,
         )
-
-    def _connect_caches(self):
-        for cache in self._cache_mechanisms.values():
-            if cache is not None:
-                cache.set_elements_df(self._elements)

@@ -42,7 +42,12 @@ class ElementStore:
         self._table[element_id] = load_mechanism
 
     def get(self, element_id: Hashable) -> "LoadMechanism":
-        return self._table[element_id]
+        try:
+            return self._table[element_id]
+        except KeyError:
+            raise KeyError(
+                f"ElementStore has no entry for element_id={element_id!r}"
+            ) from None
 
     def extend(self, other: "ElementStore") -> None:
         """Merge another store's entries into this one. Element ids must be disjoint."""

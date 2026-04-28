@@ -12,6 +12,7 @@ from bridge.utils.helper import Displayable
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
+    from bridge.primitives.element.data.element_store import ElementStore
     from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
     from bridge.primitives.sample.transform.sample_transform import SampleTransform
 
@@ -95,6 +96,7 @@ class Sample(Displayable):
     def from_pd_dataframe(
         cls,
         elements_df: pd.DataFrame,
+        store: ElementStore,
         display_engine: DisplayEngine | None,
         cache_mechanisms: Dict[str, CacheMechanism | None],
     ):
@@ -110,10 +112,13 @@ class Sample(Displayable):
 
         elements = []
         for element_row in fast_to_dict_records(elements_df):
+            element_id = element_row[ELEMENT_COLS.ID]
             element_role = element_row.get(ELEMENT_COLS.ROLE, element_row[ELEMENT_COLS.ETYPE])
+            load_mechanism = store.get(element_id)
             elements.append(
                 Element.from_dict(
                     element_row,
+                    load_mechanism=load_mechanism,
                     display_engine=display_engine,
                     cache_mechanism=cache_mechanisms.get(element_role),
                 )
