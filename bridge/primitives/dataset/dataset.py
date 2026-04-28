@@ -134,6 +134,39 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         elements_df = pd.DataFrame(element_records).set_index(INDICES)
         return cls(elements=elements_df, display_engine=display_engine, cache_mechanisms=cache_mechanisms)
 
+    @classmethod
+    def from_role_dict(
+        cls,
+        elements_by_role: Dict[str, List[Element]],
+        display_engine: DisplayEngine | None = None,
+        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
+    ) -> Self:
+        """Build a Dataset from elements grouped by role.
+
+        The role from each dict key is assigned to that element's row in the
+        underlying DataFrame, overriding any role already set on the
+        Element. Empty value lists are silently skipped. Caller's Element
+        instances are NOT mutated; only the DataFrame records carry the
+        assigned role.
+        """
+        from bridge.primitives.element.element import Element
+
+        records = []
+        for role, elements in elements_by_role.items():
+            for elem in elements:
+                record = elem.to_dict()
+                record[ELEMENT_COLS.ROLE] = role
+                records.append(pd.Series(record))
+        if not records:
+            elements_df = pd.DataFrame(columns=Element.keys).set_index(INDICES)
+        else:
+            elements_df = pd.DataFrame(records).set_index(INDICES)
+        return cls(
+            elements=elements_df,
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
+        )
+
     def _connect_caches(self):
         for cache in self._cache_mechanisms.values():
             if cache is not None:

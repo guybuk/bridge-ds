@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.sample import Sample
@@ -141,3 +142,40 @@ def test_one_raises_when_role_has_multiple_elements():
     sample = Sample(elements=[a, b])
     with pytest.raises(ValueError, match="exactly one"):
         sample.one("image")
+
+
+def test_from_role_dict_assigns_roles_from_keys():
+    ref0 = _make_element(etype="image", element_id="e0", sample_id=0)
+    tgt0 = _make_element(etype="image", element_id="e1", sample_id=0)
+    ref1 = _make_element(etype="image", element_id="e2", sample_id=1)
+    tgt1 = _make_element(etype="image", element_id="e3", sample_id=1)
+    ds = Dataset.from_role_dict({
+        "reference": [ref0, ref1],
+        "target": [tgt0, tgt1],
+    })
+
+    sample = ds.iget(0)
+    assert set(sample.elements.keys()) == {"reference", "target"}
+    assert sample.one("reference").id == "e0"
+    assert sample.one("target").id == "e1"
+
+
+def test_from_role_dict_overrides_prior_role():
+    """If an Element already has a role set, the dict key wins."""
+    elem = _make_element(etype="image", role="ignored", element_id="e0", sample_id=0)
+    ds = Dataset.from_role_dict({"reference": [elem]})
+    assert ds.iget(0).one("reference").id == "e0"
+
+
+def test_from_role_dict_empty_value_lists_are_ok():
+    ref = _make_element(etype="image", element_id="e0", sample_id=0)
+    ds = Dataset.from_role_dict({"reference": [ref], "target": []})
+    assert "reference" in ds.iget(0).elements
+    assert "target" not in ds.iget(0).elements  # no element so no key
+
+
+def test_from_role_dict_does_not_mutate_input_elements():
+    elem = _make_element(etype="image", role="original_role", element_id="e0", sample_id=0)
+    Dataset.from_role_dict({"reference": [elem]})
+    # Caller's element should still have its original role
+    assert elem.role == "original_role"
