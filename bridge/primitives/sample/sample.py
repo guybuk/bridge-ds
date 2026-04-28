@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Dict, Hashable, List
+from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Tuple
 
 import pandas as pd
 
@@ -49,6 +49,20 @@ class Sample(Displayable):
         for role, elist in self._elements.items():
             data_dict[role].extend([e.data for e in elist])
         return dict(data_dict)
+
+    def by_etype(self, etype: str) -> List[Tuple[str, Element]]:
+        """Return all elements with the given etype across roles.
+
+        Returns a list of (role, Element) tuples. Useful for transforms
+        that operate on a data-kind regardless of which sample-level role
+        it occupies.
+        """
+        out: List[Tuple[str, Element]] = []
+        for role, e_list in self._elements.items():
+            for e in e_list:
+                if e.etype == etype:
+                    out.append((role, e))
+        return out
 
     def show(self, **kwargs: Any):
         return self._display_engine.show_sample(self, **kwargs)

@@ -90,3 +90,30 @@ def test_sample_grouping_is_unchanged_when_roles_default():
     sample = Sample(elements=[a, b])
     assert list(sample.elements.keys()) == ["image"]
     assert sample.elements["image"] == [a, b]
+
+
+def test_by_etype_collects_across_roles():
+    ref = _make_element(etype="image", role="reference", element_id="e0", sample_id="s0")
+    tgt = _make_element(etype="image", role="target", element_id="e1", sample_id="s0")
+    label = _make_element(etype="class_label", role="label", element_id="lbl", sample_id="s0")
+    sample = Sample(elements=[ref, tgt, label])
+
+    images = sample.by_etype("image")
+    assert {(role, e.id) for role, e in images} == {("reference", "e0"), ("target", "e1")}
+
+
+def test_by_etype_empty_when_etype_absent():
+    ref = _make_element(etype="image", role="reference", element_id="e0", sample_id="s0")
+    sample = Sample(elements=[ref])
+    assert sample.by_etype("bbox") == []
+
+
+def test_by_etype_works_when_role_equals_etype():
+    """Old-style elements (role==etype default) still find via by_etype."""
+    a = _make_element(etype="image", element_id="e0", sample_id="s0")
+    sample = Sample(elements=[a])
+    images = sample.by_etype("image")
+    assert len(images) == 1
+    role, elem = images[0]
+    assert role == "image"
+    assert elem.id == "e0"
