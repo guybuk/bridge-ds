@@ -92,7 +92,14 @@ $ cd bridge-ds
 $ uv sync --all-extras
 
 # Testing
-$ pytest tests/core
+# Default: fast unit tests across core + vision (notebooks excluded)
+$ pytest
+
+# Run notebook integration tests (slow, ~5 min, requires `vision` extras)
+$ pytest -m slow
+
+# Run everything (CI uses this)
+$ pytest -m "slow or not slow"
 
 # Building the docs
 $ sudo apt install pandoc

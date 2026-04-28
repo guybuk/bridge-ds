@@ -52,6 +52,14 @@ jobs:
 
         echo "Running: $cmd"
         eval $cmd
+    - name: Cache downloaded notebook test data
+      if: matrix.dependencies.test_dir == 'vision'
+      uses: actions/cache@v4
+      with:
+        path: |
+          /tmp/bridge-ds/tutorials/coco
+          /tmp/bridge-ds/tutorials/imdb
+        key: notebook-data-v1
     - name: Test with pytest
       run: |
-        uv run pytest tests/${{ matrix.dependencies.test_dir }}
+        uv run pytest tests/${{ matrix.dependencies.test_dir }} -m "slow or not slow"

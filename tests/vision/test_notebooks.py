@@ -2,8 +2,10 @@ from pathlib import Path
 
 import pytest
 
+pytestmark = pytest.mark.slow
+
 NOTEBOOK_DIR = Path.cwd() / "docs" / "source" / "user_guide" / "notebooks"
-NOTEBOOKS_LIST = [p for p in NOTEBOOK_DIR.rglob("*[!\.ipynb_checkpoints]*.ipynb") if ".ipynb_checkpoints" not in str(p)]
+NOTEBOOKS_LIST = [p for p in NOTEBOOK_DIR.rglob("*.ipynb") if ".ipynb_checkpoints" not in str(p)]
 
 
 @pytest.fixture(
@@ -17,6 +19,5 @@ def tb(request):
         yield tb
 
 
-# @pytest.mark.skip(reason="This test needs to be moved to the correct location")
 def test_notebook(tb):
     tb.execute()
