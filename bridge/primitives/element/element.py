@@ -58,8 +58,8 @@ class Element(Displayable):
         return self._etype
 
     @property
-    def category(self) -> str:
-        return self._load_mechanism.category
+    def encoding(self) -> str:
+        return self._load_mechanism.encoding
 
     @property
     def metadata(self) -> Dict[str, Any]:

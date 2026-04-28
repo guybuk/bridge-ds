@@ -42,14 +42,14 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
         class_dir_list = [d for d in list(self._split_root.iterdir()) if d.is_dir()]
         for class_idx, class_dir in enumerate(sorted(class_dir_list)):
             for textfile in class_dir.iterdir():
-                load_mechanism = LoadMechanism.from_url_string(str(textfile), "text")
+                load_mechanism = LoadMechanism.from_url_string(str(textfile), "utf8")
                 text_element = Element(
                     element_id=f"text_{textfile.stem}",
                     sample_id=textfile.stem,
                     etype="text",
                     load_mechanism=load_mechanism,
                 )
-                load_mechanism = LoadMechanism(ClassLabel(class_idx, class_dir.name), category="obj")
+                load_mechanism = LoadMechanism(ClassLabel(class_idx, class_dir.name), encoding="pickle")
                 label_element = Element(
                     element_id=f"label_{textfile.stem}",
                     sample_id=textfile.stem,

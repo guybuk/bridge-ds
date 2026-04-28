@@ -22,7 +22,7 @@ class FlatAttributeListMixin:
 
 @dataclass
 class LoadMechanismCols(FlatAttributeListMixin):
-    CATEGORY: str
+    ENCODING: str
     URL_OR_DATA: str
 
 
@@ -36,13 +36,13 @@ class ElementCols(FlatAttributeListMixin):
 
 ELEMENT_ID_COL_NAME = "element_id"
 SAMPLE_ID_COL_NAME = "sample_id"
-DATA_CATEGORY_COL_NAME = "category"
+DATA_ENCODING_COL_NAME = "encoding"
 ELEMENT_TYPE_COL_NAME = "element_type"
 
 ELEMENT_DATA_COL_NAME = "data"
 
 
-LOAD_MECHANISM_COL_NAMES = LoadMechanismCols(CATEGORY=DATA_CATEGORY_COL_NAME, URL_OR_DATA=ELEMENT_DATA_COL_NAME)
+LOAD_MECHANISM_COL_NAMES = LoadMechanismCols(ENCODING=DATA_ENCODING_COL_NAME, URL_OR_DATA=ELEMENT_DATA_COL_NAME)
 
 ELEMENT_COLS = ElementCols(
     ID=ELEMENT_ID_COL_NAME,
