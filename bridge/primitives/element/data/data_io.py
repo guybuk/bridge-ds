@@ -94,22 +94,6 @@ class TorchDataIO(DataIO):
 
 
 @register
-class NumpyDataIO(DataIO):
-    category = "numpy"
-    extension = ".npy"
-
-    @classmethod
-    def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
-        if not isinstance(url_or_data, URIComponents):
-            return url_or_data
-        return np.load(str(url_or_data))
-
-    @classmethod
-    def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
-        raise NotImplementedError()
-
-
-@register
 class TextDataIO(DataIO):
     category = "text"
     extension = ".txt"
@@ -118,11 +102,20 @@ class TextDataIO(DataIO):
     def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
-        return open(str(url_or_data), "r").read()
+        return Path(str(url_or_data)).read_text()
 
     @classmethod
     def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
-        raise NotImplementedError()
+        if url is None:
+            return LoadMechanism(data, cls.category)
+
+        if url.scheme not in ["", "file"]:
+            raise NotImplementedError("Only saving locally is supported for now.")
+
+        path = Path(str(url))
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(data)
+        return LoadMechanism.from_url_string(str(path), cls.category)
 
 
 @register
@@ -134,7 +127,13 @@ class ObjDataIO(DataIO):
     def load(cls, url_or_data: URIComponents | ELEMENT_DATA_TYPE) -> ELEMENT_DATA_TYPE:
         if not isinstance(url_or_data, URIComponents):
             return url_or_data
-        raise NotImplementedError()
+
+        if url_or_data.scheme not in ["", "file"]:
+            raise NotImplementedError("Only loading locally is supported for now.")
+        import pickle
+
+        with open(str(url_or_data), "rb") as f:
+            return pickle.load(f)
 
     @classmethod
     def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
