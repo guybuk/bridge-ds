@@ -66,6 +66,7 @@ def element_dict(load_mechanism_dict):
     return {
         ELEMENT_COLS.ID: "123",
         ELEMENT_COLS.ETYPE: "image",
+        ELEMENT_COLS.ROLE: "image",
         ELEMENT_COLS.SAMPLE_ID: 0,
         **load_mechanism_dict,
     }

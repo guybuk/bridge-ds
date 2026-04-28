@@ -31,6 +31,7 @@ class ElementCols(FlatAttributeListMixin):
     ID: str
     SAMPLE_ID: str
     ETYPE: str
+    ROLE: str
     LOAD_MECHANISM: LoadMechanismCols
 
 
@@ -38,6 +39,7 @@ ELEMENT_ID_COL_NAME = "element_id"
 SAMPLE_ID_COL_NAME = "sample_id"
 DATA_ENCODING_COL_NAME = "encoding"
 ELEMENT_TYPE_COL_NAME = "element_type"
+ROLE_COL_NAME = "role"
 
 ELEMENT_DATA_COL_NAME = "data"
 
@@ -48,6 +50,7 @@ ELEMENT_COLS = ElementCols(
     ID=ELEMENT_ID_COL_NAME,
     SAMPLE_ID=SAMPLE_ID_COL_NAME,
     ETYPE=ELEMENT_TYPE_COL_NAME,
+    ROLE=ROLE_COL_NAME,
     LOAD_MECHANISM=LOAD_MECHANISM_COL_NAMES,
 )
 

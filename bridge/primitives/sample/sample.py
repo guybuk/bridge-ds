@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Any, Dict, Hashable, List
+from typing import TYPE_CHECKING, Any, Dict, Hashable, List, Tuple
 
 import pandas as pd
 
@@ -46,9 +46,35 @@ class Sample(Displayable):
     @property
     def data(self) -> Dict[str, List[ELEMENT_DATA_TYPE]]:
         data_dict = defaultdict(list)
-        for etype, elist in self._elements.items():
-            data_dict[etype].extend([e.data for e in elist])
+        for role, elist in self._elements.items():
+            data_dict[role].extend([e.data for e in elist])
         return dict(data_dict)
+
+    def by_etype(self, etype: str) -> List[Tuple[str, Element]]:
+        """Return all elements with the given etype across roles.
+
+        Returns a list of (role, Element) tuples. Useful for transforms
+        that operate on a data-kind regardless of which sample-level role
+        it occupies.
+        """
+        out: List[Tuple[str, Element]] = []
+        for role, e_list in self._elements.items():
+            for e in e_list:
+                if e.etype == etype:
+                    out.append((role, e))
+        return out
+
+    def one(self, role: str) -> Element:
+        """Return the single Element for `role`, asserting exactly one exists.
+
+        Raises ValueError if the role is missing or has multiple elements.
+        """
+        elements = self._elements.get(role, [])
+        if len(elements) != 1:
+            raise ValueError(
+                f"Sample.one(role={role!r}): expected exactly one element, got {len(elements)}"
+            )
+        return elements[0]
 
     def show(self, **kwargs: Any):
         return self._display_engine.show_sample(self, **kwargs)
@@ -84,14 +110,12 @@ class Sample(Displayable):
 
         elements = []
         for element_row in fast_to_dict_records(elements_df):
-            etype = element_row[ELEMENT_COLS.ETYPE]
-
-            element_type = str(etype)
+            element_role = element_row.get(ELEMENT_COLS.ROLE, element_row[ELEMENT_COLS.ETYPE])
             elements.append(
                 Element.from_dict(
                     element_row,
                     display_engine=display_engine,
-                    cache_mechanism=cache_mechanisms.get(element_type),
+                    cache_mechanism=cache_mechanisms.get(element_role),
                 )
             )
         return cls(elements=elements, display_engine=display_engine)
@@ -116,10 +140,10 @@ class Sample(Displayable):
 
     @staticmethod
     def _convert_elements_list_to_dict(elements: List[Element]) -> Dict[str, List[Element]]:
-        elements_by_type: Dict[str, List[Element]] = defaultdict(list)
+        elements_by_role: Dict[str, List[Element]] = defaultdict(list)
         for element in elements:
-            elements_by_type[element.etype].append(element)
-        d = dict(elements_by_type)
+            elements_by_role[element.role].append(element)
+        d = dict(elements_by_role)
         return d
 
     @staticmethod
@@ -127,11 +151,11 @@ class Sample(Displayable):
         if cache_mechanisms is None:
             cache_mechanisms = {}
 
-        sample_etypes = sample.elements.keys()
-        if set(sample_etypes) == set(cache_mechanisms.keys()):
+        sample_roles = sample.elements.keys()
+        if set(sample_roles) == set(cache_mechanisms.keys()):
             return cache_mechanisms
 
-        default_cache_mechanisms = {etype: CacheMechanism() for etype in sample_etypes}
+        default_cache_mechanisms = {role: CacheMechanism() for role in sample_roles}
 
         missing_keys = set(default_cache_mechanisms.keys()) - set(cache_mechanisms.keys())
         if len(missing_keys) > 0:

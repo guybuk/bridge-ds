@@ -24,6 +24,7 @@ class Element(Displayable):
         etype: str,
         load_mechanism: LoadMechanism,
         sample_id: Hashable,
+        role: str | None = None,
         display_engine: DisplayEngine | None = None,
         cache_mechanism: CacheMechanism | None = None,
         metadata: Dict[str, Any] | None = None,
@@ -31,6 +32,7 @@ class Element(Displayable):
         validate_metadata(self.keys, metadata)
         self._element_id = element_id
         self._etype = etype
+        self._role = role if role is not None else etype
         self._sample_id = sample_id
         self._load_mechanism = load_mechanism
         self._display_engine = display_engine
@@ -58,6 +60,10 @@ class Element(Displayable):
         return self._etype
 
     @property
+    def role(self) -> str:
+        return self._role
+
+    @property
     def encoding(self) -> str:
         return self._load_mechanism.encoding
 
@@ -76,6 +82,7 @@ class Element(Displayable):
         return {
             ELEMENT_COLS.ID: self.id,
             ELEMENT_COLS.ETYPE: self.etype,
+            ELEMENT_COLS.ROLE: self.role,
             ELEMENT_COLS.SAMPLE_ID: self.sample_id,
             **self._load_mechanism.to_dict(),
             **self.metadata,
@@ -83,15 +90,19 @@ class Element(Displayable):
 
     @classmethod
     def from_dict(cls, dic: Dict[str, Any], **kwargs):
-        assert set(dic.keys()).issuperset(set(cls.keys)), f"Missing keys: {set(cls.keys) - set(dic.keys())}"
+        # ROLE is a recently-added column; tolerate dicts that predate it.
+        required_keys = set(cls.keys) - {ELEMENT_COLS.ROLE}
+        assert set(dic.keys()).issuperset(required_keys), f"Missing keys: {required_keys - set(dic.keys())}"
         element_id = dic[ELEMENT_COLS.ID]
         sample_id = dic[ELEMENT_COLS.SAMPLE_ID]
         etype = dic[ELEMENT_COLS.ETYPE]
+        role = dic.get(ELEMENT_COLS.ROLE)
         load_mechanism = LoadMechanism.from_dict({k: v for k, v in dic.items() if k in LoadMechanism.keys})
         metadata = {k: v for k, v in dic.items() if k not in cls.keys}
         return cls(
             element_id=element_id,
             etype=etype,
+            role=role,
             load_mechanism=load_mechanism,
             sample_id=sample_id,
             display_engine=kwargs.get("display_engine"),
