@@ -64,6 +64,18 @@ class Sample(Displayable):
                     out.append((role, e))
         return out
 
+    def one(self, role: str) -> Element:
+        """Return the single Element for `role`, asserting exactly one exists.
+
+        Raises ValueError if the role is missing or has multiple elements.
+        """
+        elements = self._elements.get(role, [])
+        if len(elements) != 1:
+            raise ValueError(
+                f"Sample.one(role={role!r}): expected exactly one element, got {len(elements)}"
+            )
+        return elements[0]
+
     def show(self, **kwargs: Any):
         return self._display_engine.show_sample(self, **kwargs)
 

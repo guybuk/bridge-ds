@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.sample import Sample
@@ -117,3 +119,25 @@ def test_by_etype_works_when_role_equals_etype():
     role, elem = images[0]
     assert role == "image"
     assert elem.id == "e0"
+
+
+def test_one_returns_single_element():
+    ref = _make_element(etype="image", role="reference", element_id="e0", sample_id="s0")
+    sample = Sample(elements=[ref])
+    elem = sample.one("reference")
+    assert elem is ref
+
+
+def test_one_raises_when_role_absent():
+    ref = _make_element(etype="image", role="reference", element_id="e0", sample_id="s0")
+    sample = Sample(elements=[ref])
+    with pytest.raises(ValueError, match="role='target'"):
+        sample.one("target")
+
+
+def test_one_raises_when_role_has_multiple_elements():
+    a = _make_element(etype="image", role="image", element_id="e0", sample_id="s0")
+    b = _make_element(etype="image", role="image", element_id="e1", sample_id="s0")
+    sample = Sample(elements=[a, b])
+    with pytest.raises(ValueError, match="exactly one"):
+        sample.one("image")
