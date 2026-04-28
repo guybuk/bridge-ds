@@ -72,15 +72,15 @@ class SingularDataset(Dataset):
         return SingularSample.from_sample(super().get(sample_id))
 
     def select_samples(self, selector: Callable[[pd.DataFrame, pd.DataFrame], Sequence]):
-        selected = selector(self.samples, self.annotations)
-        new_samples = self.samples.loc[selected]
-        new_annotations = self.annotations.pipe(
-            lambda df_: df_.loc[
-                df_.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).isin(
-                    new_samples.index.get_level_values(ELEMENT_COLS.SAMPLE_ID)
-                )
-            ]
-        )
+        samples = self.samples
+        annotations = self.annotations
+        selected = selector(samples, annotations)
+        new_samples = samples.loc[selected]
+        new_annotations = annotations.loc[
+            annotations.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).isin(
+                new_samples.index.get_level_values(ELEMENT_COLS.SAMPLE_ID)
+            )
+        ]
         return SingularDataset(
             new_samples,
             new_annotations,
@@ -90,11 +90,13 @@ class SingularDataset(Dataset):
         )
 
     def select_annotations(self, selector: Callable[[pd.DataFrame, pd.DataFrame], Sequence]):
-        selected = selector(self.samples, self.annotations)
-        new_annotations = self.annotations.loc[selected]
+        samples = self.samples
+        annotations = self.annotations
+        selected = selector(samples, annotations)
+        new_annotations = annotations.loc[selected]
 
         return SingularDataset(
-            self.samples,
+            samples,
             new_annotations,
             store=self._store,
             display_engine=self._display_engine,
@@ -102,21 +104,25 @@ class SingularDataset(Dataset):
         )
 
     def assign_samples(self, **kwargs: Callable[[pd.DataFrame, pd.DataFrame], Sequence]) -> Self:
-        values_dict = {name: assign_fn(self.samples, self.annotations) for name, assign_fn in kwargs.items()}
-        new_samples = self.samples.assign(**values_dict)
+        samples = self.samples
+        annotations = self.annotations
+        values_dict = {name: assign_fn(samples, annotations) for name, assign_fn in kwargs.items()}
+        new_samples = samples.assign(**values_dict)
         return SingularDataset(
             new_samples,
-            self.annotations,
+            annotations,
             store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
 
     def assign_annotations(self, **kwargs: Callable[[pd.DataFrame, pd.DataFrame], Sequence]) -> Self:
-        values_dict = {name: assign_fn(self.samples, self.annotations) for name, assign_fn in kwargs.items()}
-        new_annotations = self.annotations.assign(**values_dict)
+        samples = self.samples
+        annotations = self.annotations
+        values_dict = {name: assign_fn(samples, annotations) for name, assign_fn in kwargs.items()}
+        new_annotations = annotations.assign(**values_dict)
         return SingularDataset(
-            self.samples,
+            samples,
             new_annotations,
             store=self._store,
             display_engine=self._display_engine,
@@ -124,15 +130,27 @@ class SingularDataset(Dataset):
         )
 
     def sort_samples(self, by: str, ascending: bool = True):
-        new_samples = self.samples.sort_values(by=by, ascending=ascending)
+        samples = self.samples
+        annotations = self.annotations
+        new_samples = samples.sort_values(by=by, ascending=ascending)
         return SingularDataset(
-            new_samples, self.annotations, store=self._store, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
+            new_samples,
+            annotations,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
         )
 
     def sort_annotations(self, by: str, ascending: bool = True):
-        new_annotations = self.annotations.sort_values(by=by, ascending=ascending)
+        samples = self.samples
+        annotations = self.annotations
+        new_annotations = annotations.sort_values(by=by, ascending=ascending)
         return SingularDataset(
-            self.samples, new_annotations, store=self._store, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
+            samples,
+            new_annotations,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
         )
 
     def transform_samples(
