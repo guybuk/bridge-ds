@@ -4,14 +4,20 @@ from __future__ import annotations
 
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
+from bridge.primitives.sample import Sample
 from bridge.utils.constants import ELEMENT_COLS
 from bridge.utils.data_objects import ClassLabel
 
 
-def _make_element(etype: str = "image", role: str | None = None) -> Element:
+def _make_element(
+    etype: str = "image",
+    role: str | None = None,
+    element_id: str = "el_0",
+    sample_id: str = "s_0",
+) -> Element:
     return Element(
-        element_id="el_0",
-        sample_id="s_0",
+        element_id=element_id,
+        sample_id=sample_id,
         etype=etype,
         role=role,
         load_mechanism=LoadMechanism(ClassLabel(class_idx=0), encoding="pickle"),
@@ -65,3 +71,22 @@ def test_from_dict_tolerates_missing_role_key():
     rebuilt = Element.from_dict(d)
     assert rebuilt.role == "text"  # falls back to etype
     assert rebuilt.etype == "text"
+
+
+def test_sample_groups_elements_by_role_when_roles_distinct():
+    """Two elements with the same etype but different roles go into different slots."""
+    ref = _make_element(role="reference", element_id="e0", sample_id="s0")
+    tgt = _make_element(role="target", element_id="e1", sample_id="s0")
+    sample = Sample(elements=[ref, tgt])
+    assert set(sample.elements.keys()) == {"reference", "target"}
+    assert sample.elements["reference"] == [ref]
+    assert sample.elements["target"] == [tgt]
+
+
+def test_sample_grouping_is_unchanged_when_roles_default():
+    """Two elements with the same etype and no explicit role group together (role==etype)."""
+    a = _make_element(element_id="e0", sample_id="s0")
+    b = _make_element(element_id="e1", sample_id="s0")
+    sample = Sample(elements=[a, b])
+    assert list(sample.elements.keys()) == ["image"]
+    assert sample.elements["image"] == [a, b]
