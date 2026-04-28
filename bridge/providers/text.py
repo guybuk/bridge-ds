@@ -49,7 +49,7 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
                     etype="text",
                     load_mechanism=load_mechanism,
                 )
-                load_mechanism = LoadMechanism(ClassLabel(class_idx, class_dir.name), category="obj")
+                load_mechanism = LoadMechanism(ClassLabel(class_idx, class_dir.name), encoding="obj")
                 label_element = Element(
                     element_id=f"label_{textfile.stem}",
                     sample_id=textfile.stem,

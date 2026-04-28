@@ -20,21 +20,21 @@ def cache_mechanism(root_uri):
 
 @pytest.fixture
 def mock_is_registered(mocker):
-    mock_is_registered = mocker.patch("bridge.primitives.element.data.category_registry.is_registered")
+    mock_is_registered = mocker.patch("bridge.primitives.element.data.encoding_registry.is_registered")
     mock_is_registered.return_value = True
     return mock_is_registered
 
 
 @pytest.fixture
 def mock_store(mocker):
-    mock_store = mocker.patch("bridge.primitives.element.data.category_registry.store")
+    mock_store = mocker.patch("bridge.primitives.element.data.encoding_registry.store")
     mock_store.return_value = "Mocked stored LoadMechanism"
     return mock_store
 
 
 @pytest.fixture
 def mock_extension(mocker):
-    mock_extension = mocker.patch("bridge.primitives.element.data.category_registry.extension")
+    mock_extension = mocker.patch("bridge.primitives.element.data.encoding_registry.extension")
     mock_extension.return_value = ".ext"
     return mock_extension
 
@@ -43,7 +43,7 @@ def mock_extension(mocker):
 def mock_element():
     element = Mock()
     element.id = "test_id"
-    element.category = "test_category"
+    element.encoding = "test_category"
     return element
 
 

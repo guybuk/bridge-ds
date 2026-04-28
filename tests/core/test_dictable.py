@@ -12,23 +12,23 @@ from bridge.utils.data_objects import BoundingBox, ClassLabel, Keypoint
 @pytest.fixture(
     params=[
         {
-            ELEMENT_COLS.LOAD_MECHANISM.CATEGORY: "obj",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "obj",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: BoundingBox(np.array([0, 0, 1, 1]), class_label=ClassLabel(0)),
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.CATEGORY: "obj",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "obj",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: ClassLabel(class_idx=0, class_name="some_class"),
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.CATEGORY: "image",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "image",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: "http://example.com/image.jpg",
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.CATEGORY: "image",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "image",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: "dummy_path.jpg",
         },
         {
-            ELEMENT_COLS.LOAD_MECHANISM.CATEGORY: "obj",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "obj",
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: Keypoint(np.array([0, 0])),
         },
     ],
@@ -47,7 +47,7 @@ def load_mechanism_dict(request):
 @pytest.fixture(
     params=[
         {
-            ELEMENT_COLS.LOAD_MECHANISM.CATEGORY: "dummy",
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: "dummy",
             "lol": "dummy",
         },
         {
@@ -55,7 +55,7 @@ def load_mechanism_dict(request):
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: "dummy",
         },
     ],
-    ids=["no_url_or_data", "no_category"],
+    ids=["no_url_or_data", "no_encoding"],
 )
 def bad_load_mechanism_dict(request):
     return request.param

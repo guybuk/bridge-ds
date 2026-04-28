@@ -75,11 +75,11 @@ class TorchvisionV2Transform(SampleTransform):
         """Convert elements to torchvision v2 tensor format."""
         # Convert image to tv_tensors format
         image_data = image_element.data
-        if image_element.category == "image":
+        if image_element.encoding == "image":
             # convert to PIL image
             image_data = Image.fromarray(image_data)
             W, H = image_data.size
-        elif image_element.category == "torch":
+        elif image_element.encoding == "torch":
             image_data = tv_tensors.Image(image_data)
             W, H = image_data.shape[1], image_data.shape[2]
 
@@ -166,21 +166,21 @@ class TorchvisionV2Transform(SampleTransform):
         """Create a new element with transformed data"""
         if original_element.etype == "image":
             if isinstance(transformed_data, np.ndarray) or isinstance(transformed_data, Image.Image):
-                new_category = "image"
+                new_encoding = "image"
             else:
                 with optional_dependencies(error="raise"):
                     import torch
                 if isinstance(transformed_data, torch.Tensor):
-                    new_category = "torch"
+                    new_encoding = "torch"
                 else:
                     raise NotImplementedError(f"Invalid data type: {type(transformed_data)}")
         elif original_element.etype == "bbox":
-            new_category = "obj"
+            new_encoding = "obj"
         else:
             raise NotImplementedError(f"Unsupported element type: {original_element.etype}")
 
         provider = cache_mechanisms[original_element.etype].store(
-            original_element, transformed_data, as_category=new_category, should_update_elements=False
+            original_element, transformed_data, as_encoding=new_encoding, should_update_elements=False
         )
 
         return Element(

@@ -40,7 +40,7 @@ def synthetic_classification_dataset(synthetic_image) -> SingularDataset:
                 element_id=f"img_{i}",
                 sample_id=i,
                 etype="image",
-                load_mechanism=LoadMechanism(synthetic_image.copy(), category="image"),
+                load_mechanism=LoadMechanism(synthetic_image.copy(), encoding="image"),
             )
         )
         labels.append(
@@ -48,7 +48,7 @@ def synthetic_classification_dataset(synthetic_image) -> SingularDataset:
                 element_id=f"lbl_{i}",
                 sample_id=i,
                 etype="class_label",
-                load_mechanism=LoadMechanism(ClassLabel(class_idx=i, class_name=f"class_{i}"), category="obj"),
+                load_mechanism=LoadMechanism(ClassLabel(class_idx=i, class_name=f"class_{i}"), encoding="obj"),
             )
         )
     return SingularDataset.from_lists(images, labels)
@@ -65,7 +65,7 @@ def synthetic_detection_dataset(synthetic_image) -> SingularDataset:
                 element_id=f"img_{i}",
                 sample_id=i,
                 etype="image",
-                load_mechanism=LoadMechanism(synthetic_image.copy(), category="image"),
+                load_mechanism=LoadMechanism(synthetic_image.copy(), encoding="image"),
             )
         )
         for j in range(2):
@@ -78,7 +78,7 @@ def synthetic_detection_dataset(synthetic_image) -> SingularDataset:
                     element_id=f"bbox_{i}_{j}",
                     sample_id=i,
                     etype="bbox",
-                    load_mechanism=LoadMechanism(bbox, category="obj"),
+                    load_mechanism=LoadMechanism(bbox, encoding="obj"),
                 )
             )
     return SingularDataset.from_lists(images, bboxes)

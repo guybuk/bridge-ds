@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Dict
 
 from typing_extensions import Self
 
-from bridge.primitives.element.data import category_registry
+from bridge.primitives.element.data import encoding_registry
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.utils import Dictable
 from bridge.utils.constants import ELEMENT_COLS
@@ -16,26 +16,26 @@ if TYPE_CHECKING:
 class LoadMechanism(Dictable):
     keys = ELEMENT_COLS.LOAD_MECHANISM.list()
 
-    def __init__(self, url_or_data: URIComponents | ELEMENT_DATA_TYPE, category: str) -> None:
-        assert category_registry.is_registered(category), f"Category {category} is not registered."
+    def __init__(self, url_or_data: URIComponents | ELEMENT_DATA_TYPE, encoding: str) -> None:
+        assert encoding_registry.is_registered(encoding), f"Encoding {encoding} is not registered."
         self._url_or_data = url_or_data
-        self._category = category
+        self._encoding = encoding
 
     @property
     def url_or_data(self) -> URIComponents | ELEMENT_DATA_TYPE:
         return self._url_or_data
 
     @property
-    def category(self) -> str:
-        return self._category
+    def encoding(self) -> str:
+        return self._encoding
 
     def load_data(self) -> Any:
-        return category_registry.load(self._url_or_data, self._category)
+        return encoding_registry.load(self._url_or_data, self._encoding)
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA: self.url_or_data,
-            ELEMENT_COLS.LOAD_MECHANISM.CATEGORY: self.category,
+            ELEMENT_COLS.LOAD_MECHANISM.ENCODING: self.encoding,
         }
 
     @classmethod
@@ -43,10 +43,10 @@ class LoadMechanism(Dictable):
         assert set(dic.keys()).issuperset(set(cls.keys))
         return cls(
             url_or_data=dic[ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA],
-            category=dic[ELEMENT_COLS.LOAD_MECHANISM.CATEGORY],
+            encoding=dic[ELEMENT_COLS.LOAD_MECHANISM.ENCODING],
         )
 
     @classmethod
-    def from_url_string(cls, url_string: str, category: str) -> Self:
+    def from_url_string(cls, url_string: str, encoding: str) -> Self:
         components = URIComponents.from_str(url_string)
-        return cls(components, category)
+        return cls(components, encoding)

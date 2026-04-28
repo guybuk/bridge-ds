@@ -79,9 +79,9 @@ class Panel(DisplayEngine):
     def _plot_single_image(self, element: Element):
         import holoviews as hv
 
-        if element.category == "image":
+        if element.encoding == "image":
             data: np.ndarray = element.data
-        elif element.category == "torch":
+        elif element.encoding == "torch":
             data: np.ndarray = element.data.permute(1, 2, 0).numpy()
 
         etype = element.etype

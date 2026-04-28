@@ -58,15 +58,15 @@ def test_transform_raises_without_image(synthetic_classification_dataset, mocker
         transform(sample, cache_mechanisms={}, display_engine=None)
 
 
-def test_transform_changes_category_to_torch(synthetic_detection_dataset):
-    """When ToImage + ToDtype are applied, output category should swap to 'torch'."""
+def test_transform_changes_encoding_to_torch(synthetic_detection_dataset):
+    """When ToImage + ToDtype are applied, output encoding should swap to 'torch'."""
     sample = synthetic_detection_dataset.iget(0)
     transform = TorchvisionV2Transform(
         [v2.ToImage(), v2.ToDtype(torch.float32, scale=True)],
         bbox_format="XYXY",
     )
     transformed = sample.transform(transform)
-    assert transformed.element.category == "torch"
+    assert transformed.element.encoding == "torch"
     assert isinstance(transformed.element.data, torch.Tensor)
 
 

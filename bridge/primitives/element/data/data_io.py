@@ -4,7 +4,7 @@ from typing import Any
 
 import numpy as np
 
-from bridge.primitives.element.data.category_registry import register
+from bridge.primitives.element.data.encoding_registry import register
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.data.uri_components import URIComponents
 from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
@@ -13,7 +13,7 @@ from bridge.primitives.element.element_data_type import ELEMENT_DATA_TYPE
 class DataIO(abc.ABC):
     @property
     @abc.abstractmethod
-    def category(self):
+    def encoding(self):
         pass
 
     @property
@@ -34,7 +34,7 @@ class DataIO(abc.ABC):
 
 @register
 class JPEGDataIO(DataIO):
-    category = "image"
+    encoding = "image"
     extension = ".jpg"
 
     @classmethod
@@ -52,7 +52,7 @@ class JPEGDataIO(DataIO):
     def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
         data = np.array(data)
         if url is None:
-            return LoadMechanism(data, cls.category)
+            return LoadMechanism(data, cls.encoding)
 
         if url.scheme not in ["", "file"]:
             raise NotImplementedError("Only saving locally is supported for now.")
@@ -61,12 +61,12 @@ class JPEGDataIO(DataIO):
         path = Path(str(url)).expanduser()
         Path.mkdir(path.parent, parents=True, exist_ok=True)
         imsave(path, data)
-        return LoadMechanism.from_url_string(str(path), cls.category)
+        return LoadMechanism.from_url_string(str(path), cls.encoding)
 
 
 @register
 class TorchDataIO(DataIO):
-    category = "torch"
+    encoding = "torch"
     extension = ".pt"
 
     @classmethod
@@ -80,7 +80,7 @@ class TorchDataIO(DataIO):
     @classmethod
     def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
         if url is None:
-            return LoadMechanism(data, cls.category)
+            return LoadMechanism(data, cls.encoding)
 
         if url.scheme not in ["", "file"]:
             raise NotImplementedError("Only saving locally is supported for now.")
@@ -90,12 +90,12 @@ class TorchDataIO(DataIO):
 
         Path.mkdir(path.parent, parents=True, exist_ok=True)
         torch.save(data, path)
-        return LoadMechanism.from_url_string(str(url), cls.category)
+        return LoadMechanism.from_url_string(str(url), cls.encoding)
 
 
 @register
 class TextDataIO(DataIO):
-    category = "text"
+    encoding = "text"
     extension = ".txt"
 
     @classmethod
@@ -107,7 +107,7 @@ class TextDataIO(DataIO):
     @classmethod
     def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
         if url is None:
-            return LoadMechanism(data, cls.category)
+            return LoadMechanism(data, cls.encoding)
 
         if url.scheme not in ["", "file"]:
             raise NotImplementedError("Only saving locally is supported for now.")
@@ -115,12 +115,12 @@ class TextDataIO(DataIO):
         path = Path(str(url))
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(data)
-        return LoadMechanism.from_url_string(str(path), cls.category)
+        return LoadMechanism.from_url_string(str(path), cls.encoding)
 
 
 @register
 class ObjDataIO(DataIO):
-    category = "obj"
+    encoding = "obj"
     extension = ".pkl"
 
     @classmethod
@@ -138,7 +138,7 @@ class ObjDataIO(DataIO):
     @classmethod
     def store(cls, data: Any, url: URIComponents | None) -> LoadMechanism:
         if url is None:
-            return LoadMechanism(data, cls.category)
+            return LoadMechanism(data, cls.encoding)
 
         if url.scheme not in ["", "file"]:
             raise NotImplementedError("Only saving locally is supported for now.")
@@ -149,4 +149,4 @@ class ObjDataIO(DataIO):
         Path.mkdir(path.parent, parents=True, exist_ok=True)
         with open(path, "wb") as f:
             pickle.dump(data, f)
-        return LoadMechanism.from_url_string(str(url), cls.category)
+        return LoadMechanism.from_url_string(str(url), cls.encoding)

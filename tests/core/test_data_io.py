@@ -34,7 +34,7 @@ def test_text_data_io_store_then_load_roundtrip(tmp_path):
 
     assert target.exists()
     assert target.read_text() == payload
-    assert lm.category == "text"
+    assert lm.encoding == "text"
 
     # The returned LoadMechanism should resolve back to the same content.
     reloaded = TextDataIO.load(lm.url_or_data)
@@ -45,7 +45,7 @@ def test_text_data_io_store_inline_when_url_is_none():
     payload = "inline text"
     lm = TextDataIO.store(payload, None)
     assert lm.url_or_data == payload
-    assert lm.category == "text"
+    assert lm.encoding == "text"
 
 
 def test_obj_data_io_roundtrip(tmp_path):
@@ -59,7 +59,7 @@ def test_obj_data_io_roundtrip(tmp_path):
     lm = ObjDataIO.store(sentinel, _file_uri(target))
 
     assert target.exists()
-    assert lm.category == "obj"
+    assert lm.encoding == "obj"
 
     reloaded = ObjDataIO.load(lm.url_or_data)
     assert isinstance(reloaded, _Sentinel)
@@ -84,6 +84,6 @@ def test_text_data_io_store_rejects_non_local_scheme():
 
 def test_numpy_data_io_no_longer_registered():
     """NumpyDataIO was dead code; deleting it removes 'numpy' from the registry."""
-    from bridge.primitives.element.data import category_registry
+    from bridge.primitives.element.data import encoding_registry
 
-    assert "numpy" not in category_registry.list_registered_categories()
+    assert "numpy" not in encoding_registry.list_registered_encodings()

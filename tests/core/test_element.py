@@ -24,7 +24,7 @@ def dummy_etype():
 @pytest.fixture
 def load_mechanism_mock(mocker):
     mock = mocker.Mock(spec=LoadMechanism)
-    mock.category.return_value = "some_category"
+    mock.encoding.return_value = "some_category"
     mock.load_data.return_value = b"some_data"
     return mock
 
@@ -85,7 +85,7 @@ def test_element_static_properties(
     assert dummy_element.sample_id == dummy_sample_id
     assert dummy_element.etype == dummy_etype
     assert dummy_element.metadata == dummy_metadata
-    assert dummy_element.category == load_mechanism_mock.category
+    assert dummy_element.encoding == load_mechanism_mock.encoding
 
 
 def test_element_data(dummy_element, load_mechanism_mock, cache_mechanism_mock):

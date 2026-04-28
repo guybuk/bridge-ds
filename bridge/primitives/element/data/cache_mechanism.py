@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Hashable
 
 import pandas as pd
 
-from bridge.primitives.element.data import category_registry
+from bridge.primitives.element.data import encoding_registry
 from bridge.primitives.element.data.uri_components import URIComponents
 
 if TYPE_CHECKING:
@@ -25,25 +25,25 @@ class CacheMechanism:
         self,
         element: Element,
         data: ELEMENT_DATA_TYPE,
-        as_category: str | None = None,
+        as_encoding: str | None = None,
         should_update_elements: bool = False,
     ) -> LoadMechanism:
-        if as_category is None:
-            as_category = element.category
-        assert category_registry.is_registered(as_category), f"Category {as_category} is not registered."
-        uri = self._build_uri(element, as_category)
-        new_provider = category_registry.store(data, uri, as_category)
+        if as_encoding is None:
+            as_encoding = element.encoding
+        assert encoding_registry.is_registered(as_encoding), f"Encoding {as_encoding} is not registered."
+        uri = self._build_uri(element, as_encoding)
+        new_provider = encoding_registry.store(data, uri, as_encoding)
         if should_update_elements and self._elements is not None:
             self._update_samples_with_new_provider(element.id, new_provider)
         return new_provider
 
-    def _build_uri(self, element: Element, category: str) -> URIComponents | None:
+    def _build_uri(self, element: Element, encoding: str) -> URIComponents | None:
         if self._root_uri is None:
             return None
 
         uri = URIComponents(
             scheme=self._root_uri.scheme,
-            path=self._root_uri.path + f"/{element.id}{category_registry.extension(category)}",
+            path=self._root_uri.path + f"/{element.id}{encoding_registry.extension(encoding)}",
         )
         return uri
 
