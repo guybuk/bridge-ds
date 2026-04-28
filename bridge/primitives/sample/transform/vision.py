@@ -132,8 +132,13 @@ class TorchvisionV2Transform(SampleTransform):
         cache_mechanisms: Dict[str, CacheMechanism],
     ) -> Dict[str, List[Element]]:
         """Reconstruct elements dict with transformed data."""
-        # Start with a copy of all original elements to preserve untransformed ones
-        new_elements = copy.deepcopy(original_elements)
+        # Shallow-copy: preserve references to untransformed elements; deepcopy
+        # would recursively clone Element -> CacheMechanism -> ElementStore (a
+        # potentially huge per-lineage dict), which is both wasteful and wrong
+        # (the store is meant to be shared by reference). The transformed roles
+        # are replaced below with brand-new lists, so we never mutate any
+        # existing Element instance.
+        new_elements = {role: list(elems) for role, elems in original_elements.items()}
 
         # Update the image element with transformed data
         new_image_element = self._create_transformed_element(image_element, transformed_image, cache_mechanisms)
