@@ -243,6 +243,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "tqdm" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -285,6 +286,7 @@ requires-dist = [
     { name = "scikit-image", marker = "extra == 'vision'", specifier = ">=0.21" },
     { name = "tabulate", marker = "extra == 'vision'", specifier = ">=0.9" },
     { name = "tqdm", specifier = ">=4.60" },
+    { name = "typing-extensions", specifier = ">=4.0" },
 ]
 provides-extras = ["vision"]
 
