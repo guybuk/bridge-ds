@@ -18,9 +18,6 @@ class ElementStore:
 
     def __init__(self) -> None:
         self._table: dict[Hashable, "LoadMechanism"] = {}
-        # Incremented on every mutation; Datasets read this to detect when
-        # cached joined views are stale.
-        self._mutation_count: int = 0
 
     def __contains__(self, element_id: Hashable) -> bool:
         return element_id in self._table
@@ -39,12 +36,10 @@ class ElementStore:
                 "use update() to overwrite or extend() to merge stores."
             )
         self._table[element_id] = load_mechanism
-        self._mutation_count += 1
 
     def update(self, element_id: Hashable, load_mechanism: "LoadMechanism") -> None:
         """Set or overwrite the LoadMechanism for an element_id."""
         self._table[element_id] = load_mechanism
-        self._mutation_count += 1
 
     def get(self, element_id: Hashable) -> "LoadMechanism":
         try:
@@ -62,4 +57,3 @@ class ElementStore:
                 f"Cannot extend ElementStore: element_id overlap on {sorted(overlap)!r}"
             )
         self._table.update(other._table)
-        self._mutation_count += 1

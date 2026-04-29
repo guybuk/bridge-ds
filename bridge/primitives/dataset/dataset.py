@@ -44,11 +44,6 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         self._store = store
         self._display_engine = display_engine
         self._cache_mechanisms = cache_mechanisms or {}
-        # Cached joined view + the store mutation count at the time of caching.
-        # `elements` recomputes only when the store has been mutated since the
-        # cache was last populated.
-        self._cached_elements: pd.DataFrame | None = None
-        self._cached_mutation_count: int = -1
         for cache in self._cache_mechanisms.values():
             if cache is not None:
                 cache.bind_store(self._store)
@@ -93,16 +88,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
 
     @property
     def elements(self) -> pd.DataFrame:
-        # Cached: invalidate when the store mutation count changes (cache
-        # writes / extends bump the counter). For typical notebook patterns
-        # (build dataset, do many queries) this turns repeated samples /
-        # annotations / elements accesses from O(n_elements) per call into
-        # O(1) after the first.
-        current = self._store._mutation_count
-        if self._cached_elements is None or self._cached_mutation_count != current:
-            self._cached_elements = self._join_locations(self._df)
-            self._cached_mutation_count = current
-        return self._cached_elements
+        return self._join_locations(self._df)
 
     @property
     def sample_ids(self) -> List[Hashable]:
