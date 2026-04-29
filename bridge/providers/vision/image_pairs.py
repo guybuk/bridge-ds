@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
-from bridge.display.vision import Panel
+from bridge.display.vision import ImagePairsPanelEngine
 from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
@@ -51,7 +51,7 @@ class ImagePairs(DatasetProvider[Dataset, Sample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine | None = Panel(),
+        display_engine: DisplayEngine | None = ImagePairsPanelEngine(),
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Dataset:
         source_files = _collect_files_by_stem(self._source_dir)

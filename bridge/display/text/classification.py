@@ -13,7 +13,14 @@ if TYPE_CHECKING:
     from bridge.primitives.element.element import Element
 
 
-class Panel(DisplayEngine[SingularDataset, SingularSample]):
+class TextClassificationPanelEngine(DisplayEngine[SingularDataset, SingularSample]):
+    """Renders text + class_label samples.
+
+    Expected sample shape:
+      - role ``text`` (etype ``text``) — required, displayed as Markdown
+      - role ``class_label`` (etype ``class_label``) — optional, rendered as a Markdown table
+    """
+
     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
         if element.etype == "class_label":
             return pn.pane.Markdown(element.to_pd_series().to_frame().T.to_markdown())
