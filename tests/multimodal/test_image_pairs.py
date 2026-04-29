@@ -56,5 +56,12 @@ def test_image_pairs_missing_pair_raises(tmp_path):
     _write_jpeg(tmp_path / "source" / "a.jpg")
     _write_jpeg(tmp_path / "source" / "b.jpg")
     _write_jpeg(tmp_path / "target" / "a.jpg")
-    with pytest.raises((ValueError, AssertionError)):
+    with pytest.raises(ValueError, match="b"):
         ImagePairs(tmp_path).build_dataset()
+
+
+def test_image_pairs_share_sample_id(pair_root):
+    """Source and target elements for the same sample share sample_id."""
+    ds = ImagePairs(pair_root).build_dataset()
+    for sample in ds:
+        assert sample.one("source").sample_id == sample.one("target").sample_id

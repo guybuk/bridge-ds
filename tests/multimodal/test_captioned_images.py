@@ -57,5 +57,12 @@ def test_captioned_images_missing_caption_raises(tmp_path):
     _write_jpeg(tmp_path / "images" / "a.jpg")
     _write_jpeg(tmp_path / "images" / "b.jpg")
     (tmp_path / "captions.json").write_text(json.dumps({"a": "only one"}))
-    with pytest.raises((ValueError, KeyError)):
+    with pytest.raises(ValueError, match="b"):
         CaptionedImages(tmp_path).build_dataset()
+
+
+def test_captioned_images_share_sample_id(captioned_root):
+    """Image and caption elements for the same sample share sample_id."""
+    ds = CaptionedImages(captioned_root).build_dataset()
+    for sample in ds:
+        assert sample.one("image").sample_id == sample.one("caption").sample_id

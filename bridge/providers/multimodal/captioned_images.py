@@ -16,6 +16,20 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
+def _collect_files_by_stem(directory: Path) -> dict[str, Path]:
+    files: dict[str, Path] = {}
+    for p in sorted(directory.iterdir()):
+        if not p.is_file():
+            continue
+        if p.stem in files:
+            raise ValueError(
+                f"Duplicate stem {p.stem!r} in {directory}: "
+                f"{files[p.stem].name} and {p.name}"
+            )
+        files[p.stem] = p
+    return files
+
+
 class CaptionedImages(DatasetProvider[Dataset, Sample]):
     """Image + text-caption dataset; canonical multimodal example.
 
@@ -49,17 +63,21 @@ class CaptionedImages(DatasetProvider[Dataset, Sample]):
         with self._captions_path.open() as f:
             captions = json.load(f)
 
-        image_files = {p.stem: p for p in sorted(self._image_dir.iterdir())}
-        missing = image_files.keys() - captions.keys()
-        if missing:
-            raise ValueError(f"Images without a caption entry: {sorted(missing)}")
+        image_files = _collect_files_by_stem(self._image_dir)
+        images_without_captions = image_files.keys() - captions.keys()
+        captions_without_images = captions.keys() - image_files.keys()
+        if images_without_captions or captions_without_images:
+            raise ValueError(
+                f"Image/caption mismatch. Images without a caption: {sorted(images_without_captions)}. "
+                f"Captions without an image: {sorted(captions_without_images)}."
+            )
 
         image_elems = []
         caption_elems = []
         for stem, img_path in image_files.items():
             image_elems.append(
                 Element(
-                    element_id=f"image_{stem}",
+                    element_id=f"{self.IMAGE_ROLE}_{stem}",
                     sample_id=stem,
                     etype="image",
                     role=self.IMAGE_ROLE,
@@ -69,7 +87,7 @@ class CaptionedImages(DatasetProvider[Dataset, Sample]):
             )
             caption_elems.append(
                 Element(
-                    element_id=f"caption_{stem}",
+                    element_id=f"{self.CAPTION_ROLE}_{stem}",
                     sample_id=stem,
                     etype="text",
                     role=self.CAPTION_ROLE,

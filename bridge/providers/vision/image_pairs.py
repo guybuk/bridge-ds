@@ -16,12 +16,28 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
+def _collect_files_by_stem(directory: Path) -> dict[str, Path]:
+    files: dict[str, Path] = {}
+    for p in sorted(directory.iterdir()):
+        if not p.is_file():
+            continue
+        if p.stem in files:
+            raise ValueError(
+                f"Duplicate stem {p.stem!r} in {directory}: "
+                f"{files[p.stem].name} and {p.name}"
+            )
+        files[p.stem] = p
+    return files
+
+
 class ImagePairs(DatasetProvider[Dataset, Sample]):
     """Paired-image dataset with `source` and `target` roles (both images).
 
     Layout: ``root/source/<name>.<ext>`` and ``root/target/<name>.<ext>`` with
     matching filename stems. Sample id is the filename stem. Useful for
     image-to-image tasks: super-resolution, style transfer, denoising.
+    Pass ``encoding="png"`` (or another registered image encoding) for
+    non-JPEG inputs.
     """
 
     SOURCE_ROLE = "source"
@@ -38,12 +54,16 @@ class ImagePairs(DatasetProvider[Dataset, Sample]):
         display_engine: DisplayEngine | None = Panel(),
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Dataset:
-        source_files = {p.stem: p for p in sorted(self._source_dir.iterdir())}
-        target_files = {p.stem: p for p in sorted(self._target_dir.iterdir())}
+        source_files = _collect_files_by_stem(self._source_dir)
+        target_files = _collect_files_by_stem(self._target_dir)
 
-        unpaired = source_files.keys() ^ target_files.keys()
-        if unpaired:
-            raise ValueError(f"Unpaired stems between source/ and target/: {sorted(unpaired)}")
+        only_source = source_files.keys() - target_files.keys()
+        only_target = target_files.keys() - source_files.keys()
+        if only_source or only_target:
+            raise ValueError(
+                f"Unpaired stems. Only in source/: {sorted(only_source)}. "
+                f"Only in target/: {sorted(only_target)}."
+            )
 
         source_elems = []
         target_elems = []
