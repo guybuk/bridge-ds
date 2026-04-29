@@ -79,9 +79,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
         url_col = ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA
         enc_col = ELEMENT_COLS.LOAD_MECHANISM.ENCODING
         eids = df.index.get_level_values(ELEMENT_COLS.ID)
-        # Single pass: fetch each LoadMechanism once, project both fields.
-        table = self._store._table
-        lms = [table[eid] for eid in eids]
+        lms = [self._store.get(eid) for eid in eids]
         df[url_col] = [lm.url_or_data for lm in lms]
         df[enc_col] = [lm.encoding for lm in lms]
         return df
