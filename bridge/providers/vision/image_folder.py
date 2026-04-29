@@ -4,11 +4,11 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
-from bridge.display.vision import Panel
-from bridge.primitives.dataset import SingularDataset
+from bridge.display.vision import DetectionPanelEngine
+from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.sample.singular_sample import SingularSample
+from bridge.primitives.sample import Sample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils.data_objects import ClassLabel
 
@@ -17,13 +17,15 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
-class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
+class ImageFolder(DatasetProvider[Dataset, Sample]):
     def __init__(self, root: str | os.PathLike):
         self._root = root
 
     def build_dataset(
-        self, display_engine: DisplayEngine = Panel(), cache_mechanisms: Dict[str, CacheMechanism] = None
-    ):
+        self,
+        display_engine: DisplayEngine = DetectionPanelEngine(),
+        cache_mechanisms: Dict[str, CacheMechanism] = None,
+    ) -> Dataset:
         images = []
         classes = []
         for i, class_dir in enumerate(sorted(Path(self._root).iterdir())):
@@ -45,6 +47,8 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
                 )
                 images.append(img_element)
                 classes.append(class_element)
-        return SingularDataset.from_lists(
-            images, classes, display_engine=display_engine, cache_mechanisms=cache_mechanisms
+        return Dataset.from_role_dict(
+            {"image": images, "class_label": classes},
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
         )
