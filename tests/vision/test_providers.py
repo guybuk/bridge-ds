@@ -15,6 +15,7 @@ from PIL import Image
 
 from bridge.providers.text import LargeMovieReviewDataset
 from bridge.providers.vision import ImageFolder
+from bridge.utils.constants import ELEMENT_COLS
 
 
 def _write_jpeg(path: Path, h: int = 32, w: int = 32) -> None:
@@ -76,6 +77,19 @@ def test_imagefolder_class_labels_distinct(imagefolder_root):
         class_indices.add(cl.class_idx)
 
     assert class_indices == {0, 1}
+
+
+def test_imagefolder_element_ids_are_unique(imagefolder_root):
+    """ImageFolder must mint unique element_ids across all samples and classes.
+
+    A latent bug — two classes producing duplicate element_ids like
+    `class_{i}` — was previously caught structurally by ElementStore.set's
+    strict-on-duplicate raise. Pin the invariant explicitly so intent is
+    documented even if ElementStore ever loosens that check.
+    """
+    ds = ImageFolder(imagefolder_root).build_dataset()
+    eids = ds.elements.index.get_level_values(ELEMENT_COLS.ID)
+    assert len(set(eids)) == len(eids)
 
 
 def test_imagefolder_image_data_loadable(imagefolder_root):
