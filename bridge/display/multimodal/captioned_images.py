@@ -50,8 +50,8 @@ class CaptionedImagesPanelEngine(DisplayEngine):
                     f"'{self.CAPTION_ROLE}' roles; missing '{role}'"
                 )
 
-        img_pane = pn.pane.HoloViews(self._plot_single_image(sample.elements[self.IMAGE_ROLE][0]))
-        caption_pane = pn.pane.Markdown(f"**Caption:** {sample.elements[self.CAPTION_ROLE][0].data}")
+        img_pane = pn.pane.HoloViews(self._plot_single_image(sample.one(self.IMAGE_ROLE)))
+        caption_pane = pn.pane.Markdown(f"**Caption:** {sample.one(self.CAPTION_ROLE).data}")
         return pn.Row(img_pane, caption_pane)
 
     def show_dataset(

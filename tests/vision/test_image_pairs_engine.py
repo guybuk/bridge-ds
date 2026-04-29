@@ -47,4 +47,16 @@ def test_image_pairs_engine_show_dataset(pair_dataset):
 
 def test_image_pairs_provider_default_engine_is_image_pairs(pair_dataset):
     """The provider should default to the matching shape engine."""
-    assert isinstance(pair_dataset._display_engine, ImagePairsPanelEngine)
+    assert isinstance(pair_dataset.display_engine, ImagePairsPanelEngine)
+
+
+def test_image_pairs_engine_missing_role_raises(pair_dataset):
+    """show_sample must raise ValueError naming the missing role."""
+    from bridge.primitives.sample import Sample
+
+    engine = ImagePairsPanelEngine()
+    sample = pair_dataset.iget(0)
+    # Build a degenerate sample with only the source role
+    stripped = Sample(elements={"source": sample.elements["source"]})
+    with pytest.raises(ValueError, match="target"):
+        engine.show_sample(stripped)

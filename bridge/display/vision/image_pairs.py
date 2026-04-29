@@ -51,8 +51,8 @@ class ImagePairsPanelEngine(DisplayEngine):
                     f"'{self.TARGET_ROLE}' roles; missing '{role}'"
                 )
 
-        source_plot = self._plot_single_image(sample.elements[self.SOURCE_ROLE][0]).opts(title="source")
-        target_plot = self._plot_single_image(sample.elements[self.TARGET_ROLE][0]).opts(title="target")
+        source_plot = self._plot_single_image(sample.one(self.SOURCE_ROLE)).opts(title="source")
+        target_plot = self._plot_single_image(sample.one(self.TARGET_ROLE)).opts(title="target")
         return hv.Layout([source_plot, target_plot]).cols(2)
 
     def show_dataset(

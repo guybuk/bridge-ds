@@ -57,4 +57,15 @@ def test_captioned_engine_show_dataset(captioned_dataset):
 
 def test_captioned_provider_default_engine_is_captioned(captioned_dataset):
     """Provider should default to the matching shape engine."""
-    assert isinstance(captioned_dataset._display_engine, CaptionedImagesPanelEngine)
+    assert isinstance(captioned_dataset.display_engine, CaptionedImagesPanelEngine)
+
+
+def test_captioned_engine_missing_role_raises(captioned_dataset):
+    """show_sample must raise ValueError naming the missing role."""
+    from bridge.primitives.sample import Sample
+
+    engine = CaptionedImagesPanelEngine()
+    sample = captioned_dataset.iget(0)
+    stripped = Sample(elements={"image": sample.elements["image"]})
+    with pytest.raises(ValueError, match="caption"):
+        engine.show_sample(stripped)

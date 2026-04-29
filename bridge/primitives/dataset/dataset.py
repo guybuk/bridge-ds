@@ -92,6 +92,10 @@ class Dataset(TableAPI, SampleAPI, Displayable):
     def sample_ids(self) -> List[Hashable]:
         return self._df.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).drop_duplicates().to_list()
 
+    @property
+    def display_engine(self) -> DisplayEngine | None:
+        return self._display_engine
+
     def select(self, selector: Callable):
         # selector receives the user-facing elements (with location columns) for filtering
         selected = selector(self.elements)
