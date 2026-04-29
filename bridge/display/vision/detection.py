@@ -15,7 +15,15 @@ if TYPE_CHECKING:
     from bridge.utils.data_objects import BoundingBox
 
 
-class Panel(DisplayEngine):
+class DetectionPanelEngine(DisplayEngine):
+    """Renders image + bbox (+ optional class_label) samples.
+
+    Expected sample shape:
+      - role ``image`` (etype ``image``) — required
+      - role ``bbox`` (etype ``bbox``) — optional, overlaid on the image
+      - role ``class_label`` (etype ``class_label``) — optional, rendered alongside bboxes
+    """
+
     def __init__(self, bbox_format: str = "xyxy") -> None:
         assert bbox_format in ["xyxy", "xywh", "cxcywh"]
         self._bbox_format = bbox_format
