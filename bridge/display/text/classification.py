@@ -6,20 +6,23 @@ import pandas as pd
 import panel as pn
 
 from bridge.display import DisplayEngine
-from bridge.primitives.dataset import SingularDataset
-from bridge.primitives.sample.singular_sample import SingularSample
+from bridge.primitives.dataset import Dataset
+from bridge.primitives.sample import Sample
 
 if TYPE_CHECKING:
     from bridge.primitives.element.element import Element
 
 
-class TextClassificationPanelEngine(DisplayEngine[SingularDataset, SingularSample]):
+class TextClassificationPanelEngine(DisplayEngine[Dataset, Sample]):
     """Renders text + class_label samples.
 
     Expected sample shape:
       - role ``text`` (etype ``text``) — required, displayed as Markdown
-      - role ``class_label`` (etype ``class_label``) — optional, rendered as a Markdown table
+      - role ``class_label`` (etype ``class_label``) — optional, rendered as a Markdown table alongside the text
     """
+
+    TEXT_ROLE = "text"
+    CLASS_LABEL_ROLE = "class_label"
 
     def show_element(self, element: Element, element_plot_kwargs: Dict[str, Any] | None = None):
         if element.etype == "class_label":
@@ -27,21 +30,30 @@ class TextClassificationPanelEngine(DisplayEngine[SingularDataset, SingularSampl
         elif element.etype == "text":
             return pn.pane.Markdown(element.data)
         else:
-            raise NotImplementedError()
+            raise NotImplementedError(f"TextClassificationPanelEngine cannot render etype={element.etype}")
 
     def show_sample(
         self,
-        sample: SingularSample,
+        sample: Sample,
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
     ):
-        annotations_md = pd.DataFrame([ann.to_pd_series() for ann in sample.annotations["class_label"]]).to_markdown()
-        text_display = pn.pane.Markdown(sample.data)
-        return pn.Column("# Sample Text:", text_display, "# Annotations Data:", annotations_md)
+        if self.TEXT_ROLE not in sample.elements:
+            raise ValueError(
+                f"TextClassificationPanelEngine requires a '{self.TEXT_ROLE}' role on the sample"
+            )
+
+        text_display = pn.pane.Markdown(sample.one(self.TEXT_ROLE).data)
+        components: list = ["# Sample Text:", text_display]
+        if self.CLASS_LABEL_ROLE in sample.elements:
+            label_elements = sample.elements[self.CLASS_LABEL_ROLE]
+            annotations_md = pd.DataFrame([e.to_pd_series() for e in label_elements]).to_markdown()
+            components.extend(["# Annotations Data:", annotations_md])
+        return pn.Column(*components)
 
     def show_dataset(
         self,
-        dataset: SingularDataset,
+        dataset: Dataset,
         element_plot_kwargs: Dict[str, Any] | None = None,
         sample_plot_kwargs: Dict[str, Any] | None = None,
         dataset_plot_kwargs: Dict[str, Any] | None = None,

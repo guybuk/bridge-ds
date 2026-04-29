@@ -6,11 +6,11 @@ from typing import TYPE_CHECKING, Dict
 
 import numpy as np
 
-from bridge.display.vision import Panel
-from bridge.primitives.dataset import SingularDataset
+from bridge.display.vision import DetectionPanelEngine
+from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.sample.singular_sample import SingularSample
+from bridge.primitives.sample import Sample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils import download_and_extract_archive
 from bridge.utils.data_objects import BoundingBox, ClassLabel
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
-class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
+class Coco2017Detection(DatasetProvider[Dataset, Sample]):
     images_download_links = {
         "train": "http://images.cocodataset.org/zips/train2017.zip",
         "val": "http://images.cocodataset.org/zips/val2017.zip",
@@ -59,9 +59,9 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine = Panel(bbox_format="xywh"),
+        display_engine: DisplayEngine = DetectionPanelEngine(bbox_format="xywh"),
         cache_mechanisms: Dict[str, CacheMechanism] = None,
-    ):
+    ) -> Dataset:
         img_id_list = list(sorted(self._coco.imgs.keys()))
         images = []
         bboxes = []
@@ -99,6 +99,8 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
                     },
                 )
                 bboxes.append(bbox_element)
-        return SingularDataset.from_lists(
-            images, bboxes, display_engine=display_engine, cache_mechanisms=cache_mechanisms
+        return Dataset.from_role_dict(
+            {"image": images, "bbox": bboxes},
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
         )

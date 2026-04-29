@@ -4,11 +4,11 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
-from bridge.display.text import Panel
-from bridge.primitives.dataset.singular_dataset import SingularDataset
+from bridge.display.text import TextClassificationPanelEngine
+from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
-from bridge.primitives.sample.singular_sample import SingularSample
+from bridge.primitives.sample import Sample
 from bridge.providers.dataset_provider import DatasetProvider
 from bridge.utils import download_and_extract_archive
 from bridge.utils.data_objects import ClassLabel
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
 
 
-class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
+class LargeMovieReviewDataset(DatasetProvider[Dataset, Sample]):
     dataset_url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 
     def __init__(self, root: str | os.PathLike, split: str = "train", download: bool = False):
@@ -33,9 +33,9 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine[SingularDataset, SingularSample] = Panel(),
+        display_engine: DisplayEngine = TextClassificationPanelEngine(),
         cache_mechanisms: Dict[str, CacheMechanism] = None,
-    ) -> SingularDataset:
+    ) -> Dataset:
         samples = []
         annotations = []
 
@@ -59,6 +59,8 @@ class LargeMovieReviewDataset(DatasetProvider[SingularDataset, SingularSample]):
                 samples.append(text_element)
                 annotations.append(label_element)
 
-        return SingularDataset.from_lists(
-            samples, annotations, display_engine=display_engine, cache_mechanisms=cache_mechanisms
+        return Dataset.from_role_dict(
+            {"text": samples, "class_label": annotations},
+            display_engine=display_engine,
+            cache_mechanisms=cache_mechanisms,
         )
