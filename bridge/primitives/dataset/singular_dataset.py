@@ -6,6 +6,7 @@ import pandas as pd
 from typing_extensions import Self
 
 from bridge.primitives.dataset.dataset import Dataset
+from bridge.primitives.element.data.element_store import ElementStore
 from bridge.primitives.sample.singular_sample import SingularSample
 from bridge.utils.constants import ELEMENT_COLS, INDICES, IS_SAMPLE_COL_NAME
 
@@ -28,6 +29,7 @@ class SingularDataset(Dataset):
         self,
         samples: pd.DataFrame,
         annotations: pd.DataFrame,
+        store: ElementStore | None = None,
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ):
@@ -43,20 +45,22 @@ class SingularDataset(Dataset):
         samples[IS_SAMPLE_COL_NAME] = True
         annotations[IS_SAMPLE_COL_NAME] = False
         elements = pd.concat([samples, annotations])
-        super().__init__(elements, display_engine, cache_mechanisms)
+        super().__init__(elements, store=store, display_engine=display_engine, cache_mechanisms=cache_mechanisms)
 
     @property
     def samples(self) -> pd.DataFrame:
+        sub = self._df.loc[self._df[IS_SAMPLE_COL_NAME]]
         return (
-            self._elements.loc[self._elements[IS_SAMPLE_COL_NAME]]
+            self._join_locations(sub)
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
 
     @property
     def annotations(self) -> pd.DataFrame:
+        sub = self._df.loc[~self._df[IS_SAMPLE_COL_NAME]]
         return (
-            self._elements.loc[~self._elements[IS_SAMPLE_COL_NAME]]
+            self._join_locations(sub)
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
@@ -68,63 +72,85 @@ class SingularDataset(Dataset):
         return SingularSample.from_sample(super().get(sample_id))
 
     def select_samples(self, selector: Callable[[pd.DataFrame, pd.DataFrame], Sequence]):
-        selected = selector(self.samples, self.annotations)
-        new_samples = self.samples.loc[selected]
-        new_annotations = self.annotations.pipe(
-            lambda df_: df_.loc[
-                df_.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).isin(
-                    new_samples.index.get_level_values(ELEMENT_COLS.SAMPLE_ID)
-                )
-            ]
-        )
+        samples = self.samples
+        annotations = self.annotations
+        selected = selector(samples, annotations)
+        new_samples = samples.loc[selected]
+        new_annotations = annotations.loc[
+            annotations.index.get_level_values(ELEMENT_COLS.SAMPLE_ID).isin(
+                new_samples.index.get_level_values(ELEMENT_COLS.SAMPLE_ID)
+            )
+        ]
         return SingularDataset(
             new_samples,
             new_annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
 
     def select_annotations(self, selector: Callable[[pd.DataFrame, pd.DataFrame], Sequence]):
-        selected = selector(self.samples, self.annotations)
-        new_annotations = self.annotations.loc[selected]
+        samples = self.samples
+        annotations = self.annotations
+        selected = selector(samples, annotations)
+        new_annotations = annotations.loc[selected]
 
         return SingularDataset(
-            self.samples,
+            samples,
             new_annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
 
     def assign_samples(self, **kwargs: Callable[[pd.DataFrame, pd.DataFrame], Sequence]) -> Self:
-        values_dict = {name: assign_fn(self.samples, self.annotations) for name, assign_fn in kwargs.items()}
-        new_samples = self.samples.assign(**values_dict)
+        samples = self.samples
+        annotations = self.annotations
+        values_dict = {name: assign_fn(samples, annotations) for name, assign_fn in kwargs.items()}
+        new_samples = samples.assign(**values_dict)
         return SingularDataset(
             new_samples,
-            self.annotations,
+            annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
 
     def assign_annotations(self, **kwargs: Callable[[pd.DataFrame, pd.DataFrame], Sequence]) -> Self:
-        values_dict = {name: assign_fn(self.samples, self.annotations) for name, assign_fn in kwargs.items()}
-        new_annotations = self.annotations.assign(**values_dict)
+        samples = self.samples
+        annotations = self.annotations
+        values_dict = {name: assign_fn(samples, annotations) for name, assign_fn in kwargs.items()}
+        new_annotations = annotations.assign(**values_dict)
         return SingularDataset(
-            self.samples,
+            samples,
             new_annotations,
+            store=self._store,
             display_engine=self._display_engine,
             cache_mechanisms=self._cache_mechanisms,
         )
 
     def sort_samples(self, by: str, ascending: bool = True):
-        new_samples = self.samples.sort_values(by=by, ascending=ascending)
+        samples = self.samples
+        annotations = self.annotations
+        new_samples = samples.sort_values(by=by, ascending=ascending)
         return SingularDataset(
-            new_samples, self.annotations, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
+            new_samples,
+            annotations,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
         )
 
     def sort_annotations(self, by: str, ascending: bool = True):
-        new_annotations = self.annotations.sort_values(by=by, ascending=ascending)
+        samples = self.samples
+        annotations = self.annotations
+        new_annotations = annotations.sort_values(by=by, ascending=ascending)
         return SingularDataset(
-            self.samples, new_annotations, display_engine=self._display_engine, cache_mechanisms=self._cache_mechanisms
+            samples,
+            new_annotations,
+            store=self._store,
+            display_engine=self._display_engine,
+            cache_mechanisms=self._cache_mechanisms,
         )
 
     def transform_samples(
@@ -137,13 +163,14 @@ class SingularDataset(Dataset):
         ds = super().transform_samples(
             transform, map_fn=map_fn, cache_mechanisms=cache_mechanisms, display_engine=display_engine
         )
+        full = ds.elements
         samples = (
-            ds.elements.loc[ds.elements[IS_SAMPLE_COL_NAME]]
+            full.loc[full[IS_SAMPLE_COL_NAME]]
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
         annotations = (
-            ds.elements.loc[~ds.elements[IS_SAMPLE_COL_NAME]]
+            full.loc[~full[IS_SAMPLE_COL_NAME]]
             .dropna(axis="columns", how="all")
             .drop(columns=IS_SAMPLE_COL_NAME)
         )
@@ -157,10 +184,17 @@ class SingularDataset(Dataset):
         display_engine: DisplayEngine = None,
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Self:
-        sample_records = [s.to_dict() for s in samples_list]
-        annotation_records = [a.to_dict() for a in annotations_list]
+        store = ElementStore()
+        sample_records = []
+        for s in samples_list:
+            sample_records.append(s.to_dict())
+            store.set(s.id, s._load_mechanism)
+        annotation_records = []
+        for a in annotations_list:
+            annotation_records.append(a.to_dict())
+            store.set(a.id, a._load_mechanism)
 
         samples_df = pd.DataFrame(sample_records).set_index(INDICES)
         annotations_df = pd.DataFrame(annotation_records).set_index(INDICES)
 
-        return cls(samples_df, annotations_df, display_engine=display_engine, cache_mechanisms=cache_mechanisms)
+        return cls(samples_df, annotations_df, store=store, display_engine=display_engine, cache_mechanisms=cache_mechanisms)

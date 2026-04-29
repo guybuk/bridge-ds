@@ -74,7 +74,7 @@ def test_validate_metadata(load_mechanism_mock, display_engine_mock, cache_mecha
             load_mechanism=load_mechanism_mock,
             display_engine=display_engine_mock,
             cache_mechanism=cache_mechanism_mock,
-            metadata={"source": "lol", "data": "dsadsa"},
+            metadata={"source": "lol", "element_id": "dsadsa"},
         )
 
 

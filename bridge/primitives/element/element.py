@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 
 class Element(Displayable):
-    keys = ELEMENT_COLS.list()
+    keys = [ELEMENT_COLS.ID, ELEMENT_COLS.SAMPLE_ID, ELEMENT_COLS.ETYPE, ELEMENT_COLS.ROLE]
 
     def __init__(
         self,
@@ -50,7 +50,7 @@ class Element(Displayable):
     def _data_impl(self):
         data = self._load_mechanism.load_data()
         if self._cache_mechanism:
-            new_load_mechanism = self._cache_mechanism.store(self, data, should_update_elements=True)
+            new_load_mechanism = self._cache_mechanism.store(self, data)
             self._load_mechanism = new_load_mechanism
             return data
         return data
@@ -84,12 +84,11 @@ class Element(Displayable):
             ELEMENT_COLS.ETYPE: self.etype,
             ELEMENT_COLS.ROLE: self.role,
             ELEMENT_COLS.SAMPLE_ID: self.sample_id,
-            **self._load_mechanism.to_dict(),
             **self.metadata,
         }
 
     @classmethod
-    def from_dict(cls, dic: Dict[str, Any], **kwargs):
+    def from_dict(cls, dic: Dict[str, Any], load_mechanism: LoadMechanism, **kwargs):
         # ROLE is a recently-added column; tolerate dicts that predate it.
         required_keys = set(cls.keys) - {ELEMENT_COLS.ROLE}
         assert set(dic.keys()).issuperset(required_keys), f"Missing keys: {required_keys - set(dic.keys())}"
@@ -97,7 +96,8 @@ class Element(Displayable):
         sample_id = dic[ELEMENT_COLS.SAMPLE_ID]
         etype = dic[ELEMENT_COLS.ETYPE]
         role = dic.get(ELEMENT_COLS.ROLE)
-        load_mechanism = LoadMechanism.from_dict({k: v for k, v in dic.items() if k in LoadMechanism.keys})
+        # Metadata excludes the structural keys (ID/SAMPLE_ID/ETYPE/ROLE); LoadMechanism columns
+        # are no longer in the dict at all post-rewire, so no extra exclusion needed.
         metadata = {k: v for k, v in dic.items() if k not in cls.keys}
         return cls(
             element_id=element_id,
@@ -117,11 +117,13 @@ class Element(Displayable):
     def from_pd_series(
         cls,
         element_series: pd.Series,
+        load_mechanism: LoadMechanism,
         display_engine: DisplayEngine | None = None,
         cache_mechanism: CacheMechanism | None = None,
     ):
         return cls.from_dict(
             {**element_series.to_dict()},
+            load_mechanism=load_mechanism,
             display_engine=display_engine,
             cache_mechanism=cache_mechanism,
         )

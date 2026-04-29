@@ -40,7 +40,7 @@ class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
                     metadata={"filename": img_file.name},
                 )
                 class_element = Element(
-                    element_id=f"class_{i}",
+                    element_id=f"class_{sample_id}",
                     sample_id=sample_id,
                     etype="class_label",
                     load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), encoding="pickle"),

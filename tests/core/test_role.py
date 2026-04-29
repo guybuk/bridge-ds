@@ -61,7 +61,7 @@ def test_role_appears_in_to_dict():
 def test_to_dict_round_trip_preserves_role():
     elem = _make_element(etype="image", role="target")
     d = elem.to_dict()
-    rebuilt = Element.from_dict(d)
+    rebuilt = Element.from_dict(d, load_mechanism=elem._load_mechanism)
     assert rebuilt.role == "target"
     assert rebuilt.etype == "image"
 
@@ -71,7 +71,7 @@ def test_from_dict_tolerates_missing_role_key():
     elem = _make_element(etype="text")
     d = elem.to_dict()
     d.pop(ELEMENT_COLS.ROLE)  # simulate old data
-    rebuilt = Element.from_dict(d)
+    rebuilt = Element.from_dict(d, load_mechanism=elem._load_mechanism)
     assert rebuilt.role == "text"  # falls back to etype
     assert rebuilt.etype == "text"
 
