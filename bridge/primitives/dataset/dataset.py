@@ -73,7 +73,7 @@ class Dataset(TableAPI, SampleAPI, Displayable):
     def _join_locations(self, df: pd.DataFrame) -> pd.DataFrame:
         """Add url_or_data / encoding columns to a copy of df by joining
         with the lineage's ElementStore. Used by `elements` (full table)
-        and by SingularDataset's samples/annotations (filtered subsets).
+        and by callers that derive filtered subsets.
         """
         df = df.copy()
         url_col = ELEMENT_COLS.LOAD_MECHANISM.URL_OR_DATA
