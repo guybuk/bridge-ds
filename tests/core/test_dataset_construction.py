@@ -39,9 +39,13 @@ def test_extract_store_from_empty_df():
     assert ELEMENT_COLS.LOAD_MECHANISM.ENCODING not in ds._df.columns
 
 
-def test_extract_store_from_df_missing_url_column_no_op():
-    """If URL_OR_DATA column is absent, the store stays empty and the df
-    passes through unchanged (no exception).
+def test_missing_url_column_silent_noop_current_behavior():
+    """Pin the current silent-bail-out when URL_OR_DATA is missing.
+
+    `_extract_store_from_df` returns the input df unchanged with an empty
+    store rather than raising. This is permissive for back-compat, NOT a
+    design invariant — if a future PR adds explicit validation, this test
+    will turn red and force the change to be intentional.
     """
     df = pd.DataFrame(
         {
@@ -60,8 +64,15 @@ def test_extract_store_from_df_missing_url_column_no_op():
     assert ELEMENT_COLS.ETYPE in ds._df.columns
 
 
-def test_extract_store_from_df_missing_encoding_column_no_op():
-    """Symmetric to the previous test: missing ENCODING also bails."""
+def test_missing_encoding_column_silent_noop_current_behavior():
+    """Pin the current silent-bail-out when ENCODING is missing.
+
+    Symmetric to `test_missing_url_column_silent_noop_current_behavior`:
+    `_extract_store_from_df` bails without stripping URL_OR_DATA from the
+    df when ENCODING is absent. This is permissive back-compat behavior,
+    NOT a design invariant — if a future PR adds explicit validation,
+    this test will turn red and force the change to be intentional.
+    """
     df = pd.DataFrame(
         {
             ELEMENT_COLS.ROLE: ["x"],
