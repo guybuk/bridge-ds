@@ -12,45 +12,12 @@ from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.primitives.sample.singular_sample import SingularSample
 from bridge.providers.dataset_provider import DatasetProvider
-from bridge.utils import download_and_extract_archive, optional_dependencies
+from bridge.utils import download_and_extract_archive
 from bridge.utils.data_objects import BoundingBox, ClassLabel
 
 if TYPE_CHECKING:
     from bridge.display import DisplayEngine
     from bridge.primitives.element.data.cache_mechanism import CacheMechanism
-
-
-class ImageFolder(DatasetProvider[SingularDataset, SingularSample]):
-    def __init__(self, root: str | os.PathLike):
-        self._root = root
-
-    def build_dataset(
-        self, display_engine: DisplayEngine = Panel(), cache_mechanisms: Dict[str, CacheMechanism] = None
-    ):
-        images = []
-        classes = []
-        for i, class_dir in enumerate(sorted(Path(self._root).iterdir())):
-            for img_file in class_dir.iterdir():
-                sample_id = len(images)
-                img_element = Element(
-                    element_id=f"image_{sample_id}",
-                    sample_id=sample_id,
-                    etype="image",
-                    load_mechanism=LoadMechanism.from_url_string(str(img_file), encoding="jpeg"),
-                    metadata={"filename": img_file.name},
-                )
-                class_element = Element(
-                    element_id=f"class_{sample_id}",
-                    sample_id=sample_id,
-                    etype="class_label",
-                    load_mechanism=LoadMechanism(ClassLabel(i, class_dir.name), encoding="pickle"),
-                    metadata={"filename": img_file.name},
-                )
-                images.append(img_element)
-                classes.append(class_element)
-        return SingularDataset.from_lists(
-            images, classes, display_engine=display_engine, cache_mechanisms=cache_mechanisms
-        )
 
 
 class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
@@ -134,42 +101,4 @@ class Coco2017Detection(DatasetProvider[SingularDataset, SingularSample]):
                 bboxes.append(bbox_element)
         return SingularDataset.from_lists(
             images, bboxes, display_engine=display_engine, cache_mechanisms=cache_mechanisms
-        )
-
-
-class TorchvisionCIFAR10(DatasetProvider[SingularDataset, SingularSample]):
-    def __init__(self, root: str | os.PathLike, train: bool = True, download: bool = False):
-        with optional_dependencies("raise"):
-            from torchvision.datasets import CIFAR10
-
-        self._ds = CIFAR10(root=root, train=train, download=download)
-
-    def build_dataset(
-        self,
-        display_engine: DisplayEngine = Panel(),
-        cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
-    ):
-        sample_list = []
-        annotation_list = []
-        for i, (img, target) in enumerate(zip(self._ds.data, self._ds.targets)):
-            img_element = Element(
-                element_id=i,
-                etype="image",
-                sample_id=i,
-                load_mechanism=LoadMechanism(url_or_data=img, encoding="jpeg"),
-            )
-            label_element = Element(
-                element_id=f"label_{i}",
-                etype="class_label",
-                sample_id=i,
-                load_mechanism=LoadMechanism(
-                    url_or_data=ClassLabel(class_idx=target, class_name=self._ds.classes[target]),
-                    encoding="pickle",
-                ),
-            )
-            sample_list.append(img_element)
-            annotation_list.append(label_element)
-
-        return SingularDataset.from_lists(
-            sample_list, annotation_list, display_engine=display_engine, cache_mechanisms=cache_mechanisms
         )
