@@ -61,9 +61,9 @@ def test_imagefolder_has_image_and_label_per_sample(imagefolder_root):
     ds = provider.build_dataset()
 
     for sample in ds:
-        assert sample.element.etype == "image"
-        assert "class_label" in sample.annotations
-        assert len(sample.annotations["class_label"]) == 1
+        assert sample.one("image").etype == "image"
+        assert "class_label" in sample.elements
+        assert len(sample.elements["class_label"]) == 1
 
 
 def test_imagefolder_class_labels_distinct(imagefolder_root):
@@ -72,7 +72,7 @@ def test_imagefolder_class_labels_distinct(imagefolder_root):
 
     class_indices = set()
     for sample in ds:
-        cl = sample.annotations["class_label"][0].data
+        cl = sample.elements["class_label"][0].data
         class_indices.add(cl.class_idx)
 
     assert class_indices == {0, 1}
@@ -83,7 +83,7 @@ def test_imagefolder_image_data_loadable(imagefolder_root):
     ds = provider.build_dataset()
 
     sample = ds.iget(0)
-    img = sample.element.data
+    img = sample.one("image").data
     assert img.shape == (32, 32, 3)
     assert img.dtype == np.uint8
 
@@ -99,8 +99,8 @@ def test_imdb_provider_has_text_and_label(imdb_root):
     ds = provider.build_dataset()
 
     for sample in ds:
-        assert sample.element.etype == "text"
-        assert "class_label" in sample.annotations
+        assert sample.one("text").etype == "text"
+        assert "class_label" in sample.elements
 
 
 def test_imdb_provider_text_loadable(imdb_root):
@@ -108,6 +108,6 @@ def test_imdb_provider_text_loadable(imdb_root):
     ds = provider.build_dataset()
 
     sample = ds.iget(0)
-    text = sample.element.data
+    text = sample.one("text").data
     assert isinstance(text, str)
     assert "sample review" in text

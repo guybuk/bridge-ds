@@ -8,7 +8,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from bridge.primitives.dataset import SingularDataset
+from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
 from bridge.utils.data_objects import BoundingBox, ClassLabel
@@ -30,7 +30,7 @@ def synthetic_image() -> np.ndarray:
 
 
 @pytest.fixture
-def synthetic_classification_dataset(synthetic_image) -> SingularDataset:
+def synthetic_classification_dataset(synthetic_image) -> Dataset:
     """Two-sample image classification dataset, fully in-memory."""
     images = []
     labels = []
@@ -51,11 +51,11 @@ def synthetic_classification_dataset(synthetic_image) -> SingularDataset:
                 load_mechanism=LoadMechanism(ClassLabel(class_idx=i, class_name=f"class_{i}"), encoding="pickle"),
             )
         )
-    return SingularDataset.from_lists(images, labels)
+    return Dataset.from_role_dict({"image": images, "class_label": labels})
 
 
 @pytest.fixture
-def synthetic_detection_dataset(synthetic_image) -> SingularDataset:
+def synthetic_detection_dataset(synthetic_image) -> Dataset:
     """Two-sample detection dataset with bboxes, fully in-memory."""
     images = []
     bboxes = []
@@ -81,4 +81,4 @@ def synthetic_detection_dataset(synthetic_image) -> SingularDataset:
                     load_mechanism=LoadMechanism(bbox, encoding="pickle"),
                 )
             )
-    return SingularDataset.from_lists(images, bboxes)
+    return Dataset.from_role_dict({"image": images, "bbox": bboxes})
