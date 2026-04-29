@@ -1,4 +1,8 @@
-"""End-to-end tests for Dataset.transform_samples through the multi-role store path.
+"""Tests for Dataset.transform_samples through the multi-role store path.
+
+Roundtrip through `Dataset._store` and `Dataset.from_elements`. Cache
+mechanisms are accepted but not invoked — the cache-write path is
+covered by `tests/core/test_aliasing_regression.py`.
 
 `Dataset.transform_samples` is the heaviest machinery in the multi-role
 API. Until now it was only smoke-tested via the slow notebook suite.
@@ -21,11 +25,13 @@ from bridge.utils.constants import ELEMENT_COLS
 class _NoOpPickleTransform(SampleTransform):
     """No-op transform that re-emits each element unchanged.
 
-    The element data is loaded once (so the cache-or-not path is
-    exercised), then a fresh Element is constructed pointing at the
-    in-memory data via a pickle-encoded LoadMechanism. The
-    transformed Dataset's elements should compare equal to the
-    originals.
+    Roundtrip through `Dataset._store` and `Dataset.from_elements`. Cache
+    mechanisms are accepted but not invoked — the cache-write path is
+    covered by `tests/core/test_aliasing_regression.py`.
+
+    A fresh Element is constructed pointing at the in-memory data via a
+    pickle-encoded LoadMechanism. The transformed Dataset's elements
+    should compare equal to the originals.
     """
 
     def __call__(
@@ -38,14 +44,12 @@ class _NoOpPickleTransform(SampleTransform):
         for role, elems in sample.elements.items():
             new_elems = []
             for elem in elems:
-                # Force a load so cache machinery (if any) has a chance to fire.
-                data = elem.data
                 new_elems.append(
                     Element(
                         element_id=elem.id,
                         etype=elem.etype,
                         sample_id=elem.sample_id,
-                        load_mechanism=LoadMechanism(data, encoding="pickle"),
+                        load_mechanism=LoadMechanism(elem.data, encoding="pickle"),
                         role=elem.role,
                         metadata=elem.metadata,
                     )
