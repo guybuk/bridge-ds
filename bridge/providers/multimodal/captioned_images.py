@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Dict
 
+from bridge.display.multimodal import CaptionedImagesPanelEngine
 from bridge.primitives.dataset import Dataset
 from bridge.primitives.element.data.load_mechanism import LoadMechanism
 from bridge.primitives.element.element import Element
@@ -57,7 +58,7 @@ class CaptionedImages(DatasetProvider[Dataset, Sample]):
 
     def build_dataset(
         self,
-        display_engine: DisplayEngine | None = None,
+        display_engine: DisplayEngine | None = CaptionedImagesPanelEngine(),
         cache_mechanisms: Dict[str, CacheMechanism | None] | None = None,
     ) -> Dataset:
         with self._captions_path.open() as f:
